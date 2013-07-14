@@ -4,10 +4,74 @@
 
 global proc auroraInit()
 {
-	print("Aurora init");
+	renderer
+		-rendererUIName             "Aurora"
+		-renderProcedure            "auroraRender"
+		-renderRegionProcedure      "mayaRenderRegion"
+		-iprRenderProcedure         "auroraIprRenderProcName"
+		-isRunningIprProcedure      "auroraIsRunningIpr"
+		-startIprRenderProcedure    "auroraIprRenderStart"
+		-stopIprRenderProcedure     "auroraIprRenderStop"
+		-pauseIprRenderProcedure    "auroraIprRenderPause"
+		-refreshIprRenderProcedure  "auroraIprRenderRefresh"
+		-changeIprRegionProcedure   "auroraIprRenderChangeRegion"
+		-addGlobalsTab              "Common" "createMayaSoftwareCommonGlobalsTab" "updateMayaSoftwareCommonGlobalsTab"
+		Aurora;
 }
 
 global proc auroraDestroy()
 {
-	print("Aurora destroy");
+	renderer -unregisterRenderer Aurora;
+}
+
+// Render procedures
+global proc auroraRender(int $width, int $height, int $doShadows, int $doGlowPass, string $camera, string $opts)
+{
+	print("auroraRender\n");
+}
+
+// IPR render procedures
+global proc auroraIprRenderStart(string $editor, int $width, int $height, string $camera)
+{
+	global int $auroraIprMode;
+	$auroraIprMode = true;
+
+	print("auroraIprRenderStart\n");
+}
+
+global proc auroraIprRenderPause(string $editor, int $pause)
+{
+	print("auroraIprRenderPause: " + $pause + "\n");
+}
+
+global proc auroraIprRenderStop()
+{
+	global int $auroraIprMode;
+	$auroraIprMode = false;
+
+	print("auroraIprRenderStop\n");
+}
+
+global proc auroraIprRenderRefresh()
+{
+	print("auroraIprRenderRefresh\n");
+}
+
+global proc auroraIprRenderChangeRegion(string $eidtor)
+{
+	print("auroraIprRenderChangeRegion\n");
+}
+
+// Query procedures
+global proc string auroraIprRenderProcName()
+{
+	return "auroraRender";
+}
+
+global proc int auroraIsRunningIpr()
+{
+	global int $auroraIprMode;
+	return $auroraIprMode;
+
+	print("auroraIsRunningIpr\n");
 }
