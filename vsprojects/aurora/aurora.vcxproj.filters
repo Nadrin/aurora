@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\src\main.cpp">
+      <Filter>Source Root</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stdafx.cpp">
+      <Filter>Source Root</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\maya\renderCommand.cpp">
+      <Filter>Source Root\maya</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Root">
+      <UniqueIdentifier>{617d53cd-6a08-4a29-9ee5-02f9f3234bd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Root\maya">
+      <UniqueIdentifier>{df844c3b-c79b-4921-a56b-6c0bcab8fc7d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\stdafx.h">
+      <Filter>Source Root</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\config.h">
+      <Filter>Source Root</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\maya\renderCommand.h">
+      <Filter>Source Root\maya</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\maya\aurora.mel">
+      <Filter>Source Root\maya</Filter>
+    </None>
+  </ItemGroup>
+</Project>

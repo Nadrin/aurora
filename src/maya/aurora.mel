@@ -1,0 +1,13 @@
+// Aurora Renderer
+// Copyright (c) 2013 Michal Siejak
+// Licensed under MIT open-source license, see COPYING.txt file for details.
+
+global proc auroraInit()
+{
+	print("Aurora init");
+}
+
+global proc auroraDestroy()
+{
+	print("Aurora destroy");
+}
