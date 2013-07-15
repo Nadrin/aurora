@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\engine.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\maya\renderCommand.cpp" />
     <ClCompile Include="..\..\src\stdafx.cpp">
@@ -20,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
+    <ClInclude Include="..\..\src\core\engine.h" />
     <ClInclude Include="..\..\src\maya\renderCommand.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
   </ItemGroup>
@@ -89,7 +91,7 @@
       <Command>copy "$(CudaToolkitBinDir)\cudart64*.dll" "$(OutDir)"
 copy "$(OutDir)\*.dll" "$(MAYA_LOCATION)\bin"
 copy "$(TargetPath)" "$(MAYA_LOCATION)\bin\plug-ins"
-copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\scripts"</Command>
+copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -114,7 +116,7 @@ copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\scripts"</Command>
       <Command>copy "$(CudaToolkitBinDir)\cudart64*.dll" "$(OutDir)"
 copy "$(OutDir)\*.dll" "$(MAYA_LOCATION)\bin"
 copy "$(TargetPath)" "$(MAYA_LOCATION)\bin\plug-ins"
-copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\scripts"</Command>
+copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

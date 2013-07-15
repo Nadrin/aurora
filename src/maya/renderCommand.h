@@ -8,12 +8,13 @@
 #include <maya/MPxCommand.h>
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
+#include <maya/MDagPath.h>
 
 namespace Aurora {
 
 class RenderCommand : public MPxCommand
 {
-public: // Member functions
+public:
 	RenderCommand();
 	~RenderCommand();
 
@@ -24,7 +25,10 @@ public: // Member functions
 
 	static void* creator();
 
-public: // Static variables
+protected:
+	static MStatus RenderCommand::getCameraDagPath(const MString& name, MDagPath& path);
+
+public:
 	static const char* name;
 };
 

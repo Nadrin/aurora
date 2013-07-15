@@ -6,7 +6,7 @@ global proc auroraInit()
 {
 	renderer
 		-rendererUIName             "Aurora"
-		-renderProcedure            "auroraRender"
+		-renderProcedure            "auroraRenderStart"
 		-renderRegionProcedure      "mayaRenderRegion"
 		-iprRenderProcedure         "auroraIprRenderProcName"
 		-isRunningIprProcedure      "auroraIsRunningIpr"
@@ -25,9 +25,9 @@ global proc auroraDestroy()
 }
 
 // Render procedures
-global proc auroraRender(int $width, int $height, int $doShadows, int $doGlowPass, string $camera, string $opts)
+global proc auroraRenderStart(int $width, int $height, int $doShadows, int $doGlowPass, string $camera, string $opts)
 {
-	print("auroraRender\n");
+	auroraRender -w $width -h $height -c $camera;
 }
 
 // IPR render procedures

@@ -7,6 +7,8 @@
 #define AURORA_VENDOR   "Michal Siejak"
 #define AURORA_VERSION  "0.1"
 
-#define AURORA_MELPATH     "scripts\\aurora.mel"
+#define AURORA_MELPATH     "bin\\scripts\\aurora.mel"
 #define AURORA_INITPROC    "auroraInit"
 #define AURORA_DESTROYPROC "auroraDestroy"
+
+#define AURORA_BANNER AURORA_NAME" v"AURORA_VERSION" (c) Copyright "AURORA_VENDOR

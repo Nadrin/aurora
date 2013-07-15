@@ -10,6 +10,9 @@
     <ClCompile Include="..\..\src\maya\renderCommand.cpp">
       <Filter>Source Root\maya</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\engine.cpp">
+      <Filter>Source Root\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Root">
@@ -17,6 +20,9 @@
     </Filter>
     <Filter Include="Source Root\maya">
       <UniqueIdentifier>{df844c3b-c79b-4921-a56b-6c0bcab8fc7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Root\core">
+      <UniqueIdentifier>{6fd39278-d461-4770-9200-8506a5d27d1d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -28,6 +34,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\maya\renderCommand.h">
       <Filter>Source Root\maya</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\engine.h">
+      <Filter>Source Root\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

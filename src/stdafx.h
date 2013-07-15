@@ -13,4 +13,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+namespace gpu {
+#include <cuda_runtime.h>
+}
+
 #include "config.h"
