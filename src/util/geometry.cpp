@@ -13,6 +13,7 @@ void Geometry::initialize()
 	count    = 0;
 	mode     = Geometry::AllocEmpty;
 	vertices = NULL;
+	normals  = NULL;
 }
 
 bool Geometry::resizeDefault(const unsigned int n)
@@ -20,6 +21,8 @@ bool Geometry::resizeDefault(const unsigned int n)
 	try 
 	{
 		if(gpu::cudaMalloc(&vertices, n * Geometry::TriangleSize) != gpu::cudaSuccess)
+			throw std::exception();
+		if(gpu::cudaMalloc(&normals, n * Geometry::TriangleSize) != gpu::cudaSuccess)
 			throw std::exception();
 	} 
 	catch(const std::exception&)
@@ -35,6 +38,9 @@ bool Geometry::resizeStaging(const unsigned int n)
 	try
 	{
 		if(gpu::cudaHostAlloc(&vertices, n * Geometry::TriangleSize,
+			cudaHostAllocMapped | cudaHostAllocWriteCombined) != gpu::cudaSuccess)
+			throw std::exception();
+		if(gpu::cudaHostAlloc(&normals, n * Geometry::TriangleSize,
 			cudaHostAllocMapped | cudaHostAllocWriteCombined) != gpu::cudaSuccess)
 			throw std::exception();
 	}
@@ -76,9 +82,11 @@ void Geometry::free()
 	switch(mode) {
 	case Geometry::AllocDefault:
 		gpu::cudaFree(vertices);
+		gpu::cudaFree(normals);
 		break;
 	case Geometry::AllocStaging:
 		gpu::cudaFreeHost(vertices);
+		gpu::cudaFreeHost(normals);
 		break;
 	}
 	initialize();
@@ -90,9 +98,13 @@ bool Geometry::copyToDevice(Geometry& other) const
 		return false;
 
 	float* deviceVertices;
+	float* deviceNormals;
 	gpu::cudaHostGetDevicePointer(&deviceVertices, vertices, 0);
+	gpu::cudaHostGetDevicePointer(&deviceNormals, normals, 0);
 
 	gpu::cudaMemcpy(other.vertices, deviceVertices,
+		count * Geometry::TriangleSize, gpu::cudaMemcpyDeviceToDevice);
+	gpu::cudaMemcpy(other.normals, deviceNormals,
 		count * Geometry::TriangleSize, gpu::cudaMemcpyDeviceToDevice);
 	return true;
 }
@@ -105,5 +117,6 @@ bool Geometry::padToEven(const unsigned int n)
 		return true;
 
 	memcpy(&vertices[count-1], &vertices[count-2], Geometry::TriangleSize);
+	memcpy(&normals[count-1], &normals[count-2], Geometry::TriangleSize);
 	return true;
 }

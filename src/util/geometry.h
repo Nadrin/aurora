@@ -17,6 +17,7 @@ public:
 	};
 
 	float* vertices;
+	float* normals;
 	unsigned int count;
 	GeometryAllocMode mode;
 protected:

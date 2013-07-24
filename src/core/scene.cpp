@@ -75,6 +75,7 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 	}
 
 	unsigned int vertexOffset = 0;
+	unsigned int normalOffset = 0;
 	for(auto obj=objects.begin(); obj!=objects.end(); obj++) {
 		MItMeshPolygon polyIterator(*obj);
 
@@ -87,17 +88,22 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 				MIntArray   indices;
 				polyIterator.getTriangle(i, positions, indices, MSpace::kWorld);
 
-				buffer.vertices[vertexOffset++] = (float)positions[0].x;
-				buffer.vertices[vertexOffset++] = (float)positions[1].x;
-				buffer.vertices[vertexOffset++] = (float)positions[2].x;
-				
-				buffer.vertices[vertexOffset++] = (float)positions[0].y;
-				buffer.vertices[vertexOffset++] = (float)positions[1].y;
-				buffer.vertices[vertexOffset++] = (float)positions[2].y;
+				// Store vertices (in format optimised for fast traversal)
+				for(int k=0; k<3; k++)
+					buffer.vertices[vertexOffset++] = (float)positions[k].x;
+				for(int k=0; k<3; k++)
+					buffer.vertices[vertexOffset++] = (float)positions[k].y;
+				for(int k=0; k<3; k++)
+					buffer.vertices[vertexOffset++] = (float)positions[k].z;
 
-				buffer.vertices[vertexOffset++] = (float)positions[0].z;
-				buffer.vertices[vertexOffset++] = (float)positions[1].z;
-				buffer.vertices[vertexOffset++] = (float)positions[2].z;
+				// Store normals
+				for(int k=0; k<3; k++) {
+					MVector normal;
+					polyIterator.getNormal(indices[k], normal, MSpace::kWorld);
+					buffer.normals[normalOffset++] = (float)normal.x;
+					buffer.normals[normalOffset++] = (float)normal.y;
+					buffer.normals[normalOffset++] = (float)normal.z;
+				}
 			}
 		}
 	}

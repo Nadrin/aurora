@@ -42,6 +42,7 @@ MStatus Engine::initialialize(const int device)
 
 MStatus Engine::release()
 {
+	m_scene.geometry().free();
 	gpu::cudaDeviceReset();
 	return MS::kSuccess;
 }
