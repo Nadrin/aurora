@@ -36,6 +36,7 @@ MStatus Engine::initialialize(const int device)
 		std::cerr << "Aurora: Failed to set CUDA device: " << deviceNumber << std::endl;
 		return MS::kFailure;
 	}
+	gpu::cudaSetDeviceFlags(cudaDeviceScheduleAuto | cudaDeviceMapHost);
 	return MS::kSuccess;
 }
 
@@ -47,8 +48,13 @@ MStatus Engine::release()
 
 MStatus	Engine::render(unsigned int width, unsigned int height, MDagPath& camera)
 {
+	MStatus status;
+
 	MRenderView::setCurrentCamera(camera);
 	MRenderView::startRender(width, height, false, true);
+
+	if((status = m_scene.update(Scene::NodeAll)) != MS::kSuccess)
+		return status;
 
 	// Test code!
 	RV_PIXEL* pixels = new RV_PIXEL[width*height];

@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <core/scene.h>
+
 #include <maya/MStatus.h>
 #include <maya/MDagPath.h>
 
@@ -24,7 +26,7 @@ public:
 protected:
 	Engine();
 
-	
+	Scene m_scene;
 };
 
 } // Aurora

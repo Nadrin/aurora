@@ -12,18 +12,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\engine.cpp" />
+    <ClCompile Include="..\..\src\core\scene.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\maya\renderCommand.cpp" />
     <ClCompile Include="..\..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\..\src\util\geometry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\core\engine.h" />
+    <ClInclude Include="..\..\src\core\scene.h" />
     <ClInclude Include="..\..\src\maya\renderCommand.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
+    <ClInclude Include="..\..\src\util\geometry.h" />
+    <ClInclude Include="..\..\src\util\transformation.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel" />
@@ -90,6 +95,7 @@
     <PostBuildEvent>
       <Command>copy "$(CudaToolkitBinDir)\cudart64*.dll" "$(OutDir)"
 copy "$(OutDir)\*.dll" "$(MAYA_LOCATION)\bin"
+copy "$(OutDir)\*.pdb" "$(MAYA_LOCATION)\bin\plug-ins"
 copy "$(TargetPath)" "$(MAYA_LOCATION)\bin\plug-ins"
 copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Command>
     </PostBuildEvent>
@@ -115,6 +121,7 @@ copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Comman
     <PostBuildEvent>
       <Command>copy "$(CudaToolkitBinDir)\cudart64*.dll" "$(OutDir)"
 copy "$(OutDir)\*.dll" "$(MAYA_LOCATION)\bin"
+copy "$(OutDir)\*.pdb" "$(MAYA_LOCATION)\bin\plug-ins"
 copy "$(TargetPath)" "$(MAYA_LOCATION)\bin\plug-ins"
 copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Command>
     </PostBuildEvent>
