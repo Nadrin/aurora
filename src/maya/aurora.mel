@@ -35,43 +35,39 @@ global proc auroraIprRenderStart(string $editor, int $width, int $height, string
 {
 	global int $auroraIprMode;
 	$auroraIprMode = true;
-
-	print("auroraIprRenderStart\n");
+	auroraRender -ipr true -w $width -h $height -c $camera;
 }
 
 global proc auroraIprRenderPause(string $editor, int $pause)
 {
-	print("auroraIprRenderPause: " + $pause + "\n");
+	auroraRender -e -p $pause;
 }
 
 global proc auroraIprRenderStop()
 {
 	global int $auroraIprMode;
 	$auroraIprMode = false;
-
-	print("auroraIprRenderStop\n");
+	auroraRender -e -ipr false; 
 }
 
 global proc auroraIprRenderRefresh()
 {
-	print("auroraIprRenderRefresh\n");
+	auroraRender -e -ipr true;
 }
 
-global proc auroraIprRenderChangeRegion(string $eidtor)
+global proc auroraIprRenderChangeRegion(string $editor)
 {
-	print("auroraIprRenderChangeRegion\n");
+	warning("Aurora: Changing IPR region is not supported!\n");
 }
 
 // Query procedures
 global proc string auroraIprRenderProcName()
 {
-	return "auroraRender";
+	return "auroraRenderStart";
 }
 
 global proc int auroraIsRunningIpr()
 {
 	global int $auroraIprMode;
 	return $auroraIprMode;
-
-	print("auroraIsRunningIpr\n");
 }

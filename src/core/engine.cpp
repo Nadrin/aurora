@@ -7,10 +7,12 @@
 #include <core/engine.h>
 
 #include <maya/MRenderView.h>
+#include <maya/MFnDagNode.h>
+#include <maya/MItDag.h>
 
 using namespace Aurora;
 
-Engine::Engine()
+Engine::Engine() : m_deviceID(-1), m_scene(NULL), m_raytracer(NULL)
 { }
 
 Engine::~Engine()
@@ -37,25 +39,82 @@ MStatus Engine::initialialize(const int device)
 		return MS::kFailure;
 	}
 	gpu::cudaSetDeviceFlags(cudaDeviceScheduleAuto | cudaDeviceMapHost);
+
+	m_deviceID  = deviceNumber;
+	m_scene     = new Scene();
+	m_raytracer = NULL;
+
 	return MS::kSuccess;
 }
 
 MStatus Engine::release()
 {
-	m_scene.geometry().free();
+	delete m_scene;
 	gpu::cudaDeviceReset();
 	return MS::kSuccess;
 }
 
-MStatus	Engine::render(unsigned int width, unsigned int height, MDagPath& camera)
+MStatus Engine::getRenderingCamera(const MString& name, MDagPath& path)
 {
-	MStatus status;
+	MStatus status = MS::kFailure;
 
-	MRenderView::setCurrentCamera(camera);
+	MItDag dagIterator(MItDag::kBreadthFirst, MFn::kCamera);
+	for(; !dagIterator.isDone(); dagIterator.next()) {
+		if(!dagIterator.getPath(path))
+			continue;
+		if(!path.pop())
+			continue;
+
+		MFnDagNode dagNode(path);
+		if(dagNode.name() == name) {
+			status = MS::kSuccess;
+			break;
+		}
+	}
+	return status;
+}
+
+MStatus Engine::iprStart(unsigned int width, unsigned int height, const MString& camera)
+{
+	std::cerr << "iprStart" << std::endl;
+	return MS::kSuccess;
+}
+
+MStatus Engine::iprPause(bool pause)
+{
+	std::cerr << "iprPause: " << pause << std::endl;
+	return MS::kSuccess;
+}
+
+MStatus Engine::iprRefresh()
+{
+	std::cerr << "iprRefresh" << std::endl;
+	return MS::kSuccess;
+}
+
+MStatus Engine::iprStop()
+{
+	std::cerr << "iprStop" << std::endl;
+	return MS::kSuccess;
+}
+
+MStatus	Engine::render(unsigned int width, unsigned int height, const MString& camera)
+{
+	MDagPath dagCamera;
+	if(!Engine::getRenderingCamera(camera, dagCamera)) {
+		std::cerr << "Aurora: Unable to locate active camera node!" << std::endl;
+		return MS::kFailure;
+	}
+
+	MRenderView::setCurrentCamera(dagCamera);
 	MRenderView::startRender(width, height, false, true);
 
-	if((status = m_scene.update(Scene::NodeAll)) != MS::kSuccess)
+#if 0
+	if((status = m_scene->update(Scene::NodeAll)) != MS::kSuccess)
 		return status;
+#endif
+
+	std::cerr << "render" << std::endl;
 
 	// Test code!
 	RV_PIXEL* pixels = new RV_PIXEL[width*height];
@@ -75,5 +134,10 @@ MStatus	Engine::render(unsigned int width, unsigned int height, MDagPath& camera
 	delete[] pixels;
 
 	MRenderView::endRender();
+	return MS::kSuccess;
+}
+
+MStatus Engine::update()
+{
 	return MS::kSuccess;
 }

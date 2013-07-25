@@ -25,9 +25,6 @@ public:
 
 	static void* creator();
 
-protected:
-	static MStatus RenderCommand::getCameraDagPath(const MString& name, MDagPath& path);
-
 public:
 	static const char* name;
 };

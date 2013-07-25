@@ -5,7 +5,6 @@
 
 #include <stdafx.h>
 #include <core/scene.h>
-#include <util/transformation.h>
 
 #include <vector>
 
@@ -16,13 +15,6 @@
 #include <maya/MFnDagNode.h>
 #include <maya/MFnMesh.h>
 #include <maya/MItMeshPolygon.h>
-
-/*
-#include <maya/MGeometry.h>
-#include <maya/MGeometryData.h>
-#include <maya/MGeometryManager.h>
-#include <maya/MGeometryRequirements.h>
-*/
 
 using namespace Aurora;
 

@@ -7,10 +7,6 @@
 #include <maya/renderCommand.h>
 #include <core/engine.h>
 
-#include <maya/MRenderView.h>
-#include <maya/MItDag.h>
-#include <maya/MFnDagNode.h>
-
 using namespace Aurora;
 
 const char* RenderCommand::name = "auroraRender";
@@ -19,21 +15,16 @@ const char* RenderCommand::name = "auroraRender";
 namespace {
 	bool			paramIprMode  = false;
 	bool			paramIprPause = false;
-	bool			paramEditMode = false;
 	unsigned int	paramWidth	  = 512;
 	unsigned int	paramHeight   = 512;
 	MString			paramCamera   = "persp";
 };
 
 RenderCommand::RenderCommand()
-{
-
-}
+{ }
 
 RenderCommand::~RenderCommand()
-{
-
-}
+{ }
 
 void* RenderCommand::creator()
 {
@@ -45,8 +36,9 @@ MSyntax RenderCommand::newSyntax()
 	MSyntax syntax;
 
 	syntax.enableEdit(true);
-	syntax.addFlag("-ipr", "-iprMode");
+	syntax.addFlag("-u", "-update");
 
+	syntax.addFlag("-ipr", "-iprMode", MSyntax::kBoolean);
 	syntax.addFlag("-p", "-pause", MSyntax::kBoolean);
 	syntax.addFlag("-w", "-width", MSyntax::kLong);
 	syntax.addFlag("-h", "-height", MSyntax::kLong);
@@ -57,9 +49,8 @@ MSyntax RenderCommand::newSyntax()
 
 MStatus RenderCommand::parseSyntax(MArgDatabase& argdb)
 {
-	paramEditMode = argdb.isEdit();
-	paramIprMode  = argdb.isFlagSet("-ipr");
-
+	if(argdb.isFlagSet("-ipr"))
+		argdb.getFlagArgument("-ipr", 0, paramIprMode);
 	if(argdb.isFlagSet("-p"))
 		argdb.getFlagArgument("-p", 0, paramIprPause);
 	if(argdb.isFlagSet("-w"))
@@ -70,26 +61,6 @@ MStatus RenderCommand::parseSyntax(MArgDatabase& argdb)
 		argdb.getFlagArgument("-camera", 0, paramCamera);
 
 	return MS::kSuccess;
-}
-
-MStatus RenderCommand::getCameraDagPath(const MString& name, MDagPath& path)
-{
-	MStatus status = MS::kFailure;
-
-	MItDag dagIterator(MItDag::kBreadthFirst, MFn::kCamera);
-	for(; !dagIterator.isDone(); dagIterator.next()) {
-		if(!dagIterator.getPath(path))
-			continue;
-		if(!path.pop())
-			continue;
-
-		MFnDagNode dagNode(path);
-		if(dagNode.name() == name) {
-			status = MS::kSuccess;
-			break;
-		}
-	}
-	return status;
 }
 
 MStatus RenderCommand::doIt(const MArgList& args)
@@ -105,11 +76,25 @@ MStatus RenderCommand::doIt(const MArgList& args)
 		return MS::kFailure;
 	}
 
-	MDagPath camera;
-	if(getCameraDagPath(paramCamera, camera) != MStatus::kSuccess) {
-		std::cerr << "Aurora: Unable to locate active camera node!" << std::endl;
-		return MS::kFailure;
+	if(argdb.isEdit()) {
+		if(argdb.isFlagSet("-u"))
+			return Engine::instance()->update();
+
+		if(argdb.isFlagSet("-ipr")) {
+			if(paramIprMode)
+				return Engine::instance()->iprRefresh();
+			else
+				return Engine::instance()->iprStop();
+		}
+		if(argdb.isFlagSet("-p"))
+			return Engine::instance()->iprPause(paramIprPause);
 	}
-	return Engine::instance()->render(paramWidth, paramHeight, camera);
+	else {
+		if(argdb.isFlagSet("-ipr"))
+			return Engine::instance()->iprStart(paramWidth, paramHeight, paramCamera);
+		else
+			return Engine::instance()->render(paramWidth, paramHeight, paramCamera);
+	}
+	return MS::kInvalidParameter;
 }
 

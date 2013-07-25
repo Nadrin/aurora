@@ -33,6 +33,9 @@
     <Filter Include="Source Root\util">
       <UniqueIdentifier>{427fd2d8-8394-4299-af41-6aa82f0b0d8a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Root\render">
+      <UniqueIdentifier>{928ab9c5-ac65-4336-b3db-46c7b7d1f5ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\stdafx.h">
@@ -53,8 +56,17 @@
     <ClInclude Include="..\..\src\util\geometry.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\util\transformation.h">
+    <ClInclude Include="..\..\src\util\camera.h">
       <Filter>Source Root\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\ray.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\math.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\raytracer.h">
+      <Filter>Source Root\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
