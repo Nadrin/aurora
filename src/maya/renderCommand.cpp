@@ -78,7 +78,7 @@ MStatus RenderCommand::doIt(const MArgList& args)
 
 	if(argdb.isEdit()) {
 		if(argdb.isFlagSet("-u"))
-			return Engine::instance()->update();
+			return Engine::instance()->update(false);
 
 		if(argdb.isFlagSet("-ipr")) {
 			if(paramIprMode)

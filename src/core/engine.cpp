@@ -6,13 +6,14 @@
 #include <stdafx.h>
 #include <core/engine.h>
 
+#include <maya/MGlobal.h>
 #include <maya/MRenderView.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MItDag.h>
 
 using namespace Aurora;
 
-Engine::Engine() : m_deviceID(-1), m_scene(NULL), m_raytracer(NULL)
+Engine::Engine() : m_deviceID(-1), m_scene(NULL), m_raytracer(NULL), m_state(Engine::StateIdle)
 { }
 
 Engine::~Engine()
@@ -40,6 +41,8 @@ MStatus Engine::initialialize(const int device)
 	}
 	gpu::cudaSetDeviceFlags(cudaDeviceScheduleAuto | cudaDeviceMapHost);
 
+	MThreadAsync::init();
+
 	m_deviceID  = deviceNumber;
 	m_scene     = new Scene();
 	m_raytracer = NULL;
@@ -51,6 +54,7 @@ MStatus Engine::release()
 {
 	delete m_scene;
 	gpu::cudaDeviceReset();
+	MThreadAsync::release();
 	return MS::kSuccess;
 }
 
@@ -76,68 +80,129 @@ MStatus Engine::getRenderingCamera(const MString& name, MDagPath& path)
 
 MStatus Engine::iprStart(unsigned int width, unsigned int height, const MString& camera)
 {
-	std::cerr << "iprStart" << std::endl;
+	if(m_state != Engine::StateIdle)
+		return MS::kFailure;
+	if(!Engine::getRenderingCamera(camera, m_camera))
+		return MS::kFailure;
+
+	if(!m_raytracer->createFrame(width, height, m_scene, m_camera))
+		return MS::kFailure;
+
+	m_state  = Engine::StateIprRendering;
+	m_window = Rect(0, width-1, 0, height-1);
+
+	m_raytracer->setRegion(m_window);
+	m_pause.unlock();
+
+	MRenderView::setCurrentCamera(m_camera);
+	MThreadAsync::createTask(Engine::renderThread, this, NULL, NULL);
 	return MS::kSuccess;
 }
 
 MStatus Engine::iprPause(bool pause)
 {
-	std::cerr << "iprPause: " << pause << std::endl;
+	if(pause) {
+		m_state = Engine::StateIprPaused;
+		m_pause.lock();
+	}
+	else {
+		m_state = Engine::StateIprRendering;
+		m_pause.unlock();
+	}
 	return MS::kSuccess;
 }
 
 MStatus Engine::iprRefresh()
 {
-	std::cerr << "iprRefresh" << std::endl;
-	return MS::kSuccess;
+	m_lock.lock();
+	MStatus status = m_scene->update(Scene::NodeAll);
+	m_lock.unlock();
+
+	return status;
 }
 
 MStatus Engine::iprStop()
 {
-	std::cerr << "iprStop" << std::endl;
+	m_state = Engine::StateIprStopped;
+	m_pause.unlock();
 	return MS::kSuccess;
 }
 
-MStatus	Engine::render(unsigned int width, unsigned int height, const MString& camera)
+MStatus Engine::render(unsigned int width, unsigned int height, const MString& camera)
 {
-	MDagPath dagCamera;
-	if(!Engine::getRenderingCamera(camera, dagCamera)) {
-		std::cerr << "Aurora: Unable to locate active camera node!" << std::endl;
+	MStatus status;
+
+	if(m_state != Engine::StateIdle)
 		return MS::kFailure;
+	if(!Engine::getRenderingCamera(camera, m_camera))
+		return MS::kFailure;
+
+	if(!m_raytracer->createFrame(width, height, m_scene, m_camera))
+		return MS::kFailure;
+
+	m_window = Rect(0, width-1, 0, height-1);
+	m_state  = Engine::StateRendering;
+
+	m_raytracer->setRegion(m_window);
+	MRenderView::setCurrentCamera(m_camera);
+
+	if((status = m_scene->update(Scene::NodeAll)) != MS::kSuccess) {
+		m_state = Engine::StateIdle;
+		return status;
+	}
+	if((status = m_raytracer->render(false)) != MS::kSuccess) {
+		m_state = Engine::StateIdle;
+		return status;
 	}
 
-	MRenderView::setCurrentCamera(dagCamera);
-	MRenderView::startRender(width, height, false, true);
+	status  = update(true);
+	m_state = Engine::StateIdle;
+	return status;
+}
 
-#if 0
-	if((status = m_scene->update(Scene::NodeAll)) != MS::kSuccess)
-		return status;
-#endif
+MStatus Engine::update(bool clearBackground)
+{
+	if(!m_lock.tryLock())
+		return MS::kFailure;
 
-	std::cerr << "render" << std::endl;
+	MRenderView::startRender(m_window.right+1, m_window.top+1, !clearBackground, true);
+	MRenderView::updatePixels(m_window.left, m_window.right, m_window.bottom, m_window.top,
+		m_raytracer->framebuffer(), true);
+	MRenderView::endRender();
 
-	// Test code!
-	RV_PIXEL* pixels = new RV_PIXEL[width*height];
-	for(unsigned int y=0; y<height; y++) {
-		for(unsigned int x=0; x<width; x++) {
-			RV_PIXEL p;
-			int v = (x ^ y) % 256;
-			p.r = v / 255.0f;
-			p.g = v / 255.0f;
-			p.b = v / 255.0f;
-			p.a = 1.0f;
+	if(m_state == Engine::StateIprUpdate)
+		m_state = Engine::StateIprRendering;
+	m_lock.unlock();
+	return MS::kSuccess;
+}
 
-			pixels[y*width+x] = p;
+MThreadRetVal Engine::renderThread(void* context)
+{
+	Engine* engine = (Engine*)context;
+	gpu::cudaSetDevice(engine->m_deviceID);
+
+	while(engine->m_state != Engine::StateIprStopped) {
+		engine->m_pause.lock();
+		engine->m_pause.unlock();
+
+		if(!engine->m_raytracer->render(true)) {
+			Sleep(1); // Yield CPU time
+			continue;
+		}
+
+		if(engine->m_state == Engine::StateIprStopped)
+			break;
+
+		if(engine->m_lock.tryLock()) {
+			if(engine->m_state != Engine::StateIprUpdate) {
+				engine->m_state = Engine::StateIprUpdate;
+				MGlobal::executeCommandOnIdle("auroraRender -e -u;");
+			}
+			engine->m_lock.unlock();
 		}
 	}
-	MRenderView::updatePixels(0, width-1, 0, height-1, pixels, true);
-	delete[] pixels;
 
-	MRenderView::endRender();
-	return MS::kSuccess;
-}
-
-MStatus Engine::update()
-{
-	return MS::kSuccess;
+	engine->m_raytracer->destroyFrame();
+	engine->m_state = Engine::StateIdle;
+	return 0;
 }

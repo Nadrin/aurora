@@ -5,11 +5,14 @@
 
 #pragma once
 
+#include <util/math.h>
 #include <core/scene.h>
 #include <core/raytracer.h>
 
 #include <maya/MStatus.h>
 #include <maya/MDagPath.h>
+#include <maya/MThreadAsync.h>
+#include <maya/MMutexLock.h>
 
 namespace Aurora {
 
@@ -28,15 +31,32 @@ public:
 	MStatus iprStop();
 
 	MStatus	render(unsigned int width, unsigned int height, const MString& camera);
-	MStatus update();
+	MStatus update(bool clearBackground);
 
 protected:
 	Engine();
-	static MStatus getRenderingCamera(const MString& name, MDagPath& path);
 
-	int        m_deviceID;
-	Scene*     m_scene;
-	Raytracer* m_raytracer;
+	static MStatus       getRenderingCamera(const MString& name, MDagPath& path);
+	static MThreadRetVal renderThread(void* context);
+
+	enum EngineState {
+		StateIdle = 0,
+		StateRendering,
+		StateIprRendering,
+		StateIprPaused,
+		StateIprStopped,
+		StateIprUpdate,
+	};
+
+	int         m_deviceID;
+	Rect		m_window;
+	Scene*      m_scene;
+	Raytracer*  m_raytracer;
+	EngineState m_state;
+
+	MDagPath    m_camera;
+	MMutexLock  m_lock;
+	MMutexLock  m_pause;
 };
 
 } // Aurora
