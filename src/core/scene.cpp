@@ -69,6 +69,7 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 	unsigned int vertexOffset = 0;
 	unsigned int normalOffset = 0;
 	for(auto obj=objects.begin(); obj!=objects.end(); obj++) {
+		MFnMesh dagMesh(*obj);
 		MItMeshPolygon polyIterator(*obj);
 
 		for(; !polyIterator.isDone(); polyIterator.next()) {
@@ -91,7 +92,8 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 				// Store normals
 				for(int k=0; k<3; k++) {
 					MVector normal;
-					polyIterator.getNormal(indices[k], normal, MSpace::kWorld);
+					
+					dagMesh.getFaceVertexNormal(polyIterator.index(), indices[k], normal, MSpace::kWorld);
 					buffer.normals[normalOffset++] = (float)normal.x;
 					buffer.normals[normalOffset++] = (float)normal.y;
 					buffer.normals[normalOffset++] = (float)normal.z;
