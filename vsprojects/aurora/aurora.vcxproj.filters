@@ -19,6 +19,9 @@
     <ClCompile Include="..\..\src\util\geometry.cpp">
       <Filter>Source Root\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\render\debugPattern.cpp">
+      <Filter>Source Root\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Root">
@@ -67,6 +70,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\raytracer.h">
       <Filter>Source Root\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\render\debugPattern.h">
+      <Filter>Source Root\render</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

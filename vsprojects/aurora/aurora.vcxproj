@@ -15,6 +15,7 @@
     <ClCompile Include="..\..\src\core\scene.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\maya\renderCommand.cpp" />
+    <ClCompile Include="..\..\src\render\debugPattern.cpp" />
     <ClCompile Include="..\..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -27,6 +28,7 @@
     <ClInclude Include="..\..\src\core\raytracer.h" />
     <ClInclude Include="..\..\src\core\scene.h" />
     <ClInclude Include="..\..\src\maya\renderCommand.h" />
+    <ClInclude Include="..\..\src\render\debugPattern.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
     <ClInclude Include="..\..\src\util\camera.h" />
     <ClInclude Include="..\..\src\util\geometry.h" />

@@ -5,6 +5,7 @@
 
 #include <stdafx.h>
 #include <core/engine.h>
+#include <render/debugPattern.h>
 
 #include <maya/MGlobal.h>
 #include <maya/MRenderView.h>
@@ -45,7 +46,7 @@ MStatus Engine::initialialize(const int device)
 
 	m_deviceID  = deviceNumber;
 	m_scene     = new Scene();
-	m_raytracer = NULL;
+	m_raytracer = new DebugPattern();
 
 	return MS::kSuccess;
 }
@@ -53,6 +54,8 @@ MStatus Engine::initialialize(const int device)
 MStatus Engine::release()
 {
 	delete m_scene;
+	delete m_raytracer;
+
 	gpu::cudaDeviceReset();
 	MThreadAsync::release();
 	return MS::kSuccess;
