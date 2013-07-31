@@ -10,6 +10,7 @@
 #include <maya/MRenderView.h>
 
 #include <util/math.h>
+#include <util/ray.h>
 #include <core/scene.h>
 
 namespace Aurora {
@@ -23,6 +24,9 @@ public:
 
 	virtual MStatus   render(bool ipr) = 0;
 	virtual RV_PIXEL* framebuffer() = 0;
+
+protected:
+	static void generateRays(const MDagPath& camera, const Dim& size, const Rect& region, Ray* rays);
 };
 
 } // Aurora

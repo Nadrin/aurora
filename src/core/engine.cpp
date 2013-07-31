@@ -6,6 +6,7 @@
 #include <stdafx.h>
 #include <core/engine.h>
 #include <render/debugPattern.h>
+#include <render/raycaster.h>
 
 #include <maya/MGlobal.h>
 #include <maya/MRenderView.h>
@@ -46,7 +47,7 @@ MStatus Engine::initialialize(const int device)
 
 	m_deviceID  = deviceNumber;
 	m_scene     = new Scene();
-	m_raytracer = new DebugPattern();
+	m_raytracer = new Raycaster();
 
 	return MS::kSuccess;
 }
@@ -140,6 +141,11 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	if(!Engine::getRenderingCamera(camera, m_camera))
 		return MS::kFailure;
 
+	if((status = m_scene->update(Scene::NodeAll)) != MS::kSuccess) {
+		m_state = Engine::StateIdle;
+		return status;
+	}
+
 	if(!m_raytracer->createFrame(width, height, m_scene, m_camera))
 		return MS::kFailure;
 
@@ -149,16 +155,15 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	m_raytracer->setRegion(m_window);
 	MRenderView::setCurrentCamera(m_camera);
 
-	if((status = m_scene->update(Scene::NodeAll)) != MS::kSuccess) {
-		m_state = Engine::StateIdle;
-		return status;
-	}
 	if((status = m_raytracer->render(false)) != MS::kSuccess) {
+		m_raytracer->destroyFrame();
 		m_state = Engine::StateIdle;
 		return status;
 	}
 
-	status  = update(true);
+	status = update(true);
+	m_raytracer->destroyFrame();
+
 	m_state = Engine::StateIdle;
 	return status;
 }

@@ -9,9 +9,9 @@
 using namespace Aurora;
 
 DebugPattern::DebugPattern() : m_framebuffer(NULL)
-{ 
-	m_size[0]   = m_size[1]   = 0;
-	m_offset[0] = m_offset[1] = 0;
+{
+	m_offset.x = 0;
+	m_offset.y = 0;
 }
 
 DebugPattern::~DebugPattern()
@@ -19,8 +19,7 @@ DebugPattern::~DebugPattern()
 
 MStatus DebugPattern::createFrame(const unsigned int width, const unsigned int height, Scene* scene, MDagPath& camera)
 {
-	m_size[0]     = width;
-	m_size[1]     = height;
+	m_size        = Dim(width, height);
 	m_region      = Rect(0, width-1, 0, height-1);
 	m_framebuffer = new RV_PIXEL[width*height];
 
@@ -51,10 +50,10 @@ MStatus DebugPattern::render(bool ipr)
 {
 	for(unsigned int y=m_region.bottom; y<m_region.top; y++) {
 		for(unsigned int x=m_region.left; x<m_region.right; x++) {
-			unsigned int px = x + m_offset[0];
-			unsigned int py = y + m_offset[1];
+			unsigned int px = x + m_offset.x;
+			unsigned int py = y + m_offset.y;
 
-			RV_PIXEL* p = &m_framebuffer[y * m_size[0] + x];
+			RV_PIXEL* p = &m_framebuffer[y * m_size.width + x];
 			p->r = ((px ^ py) % 256) / 255.0f;
 			p->g = ((px ^ py) % 256) / 255.0f;
 			p->b = ((px ^ py) % 256) / 255.0f;
@@ -62,7 +61,7 @@ MStatus DebugPattern::render(bool ipr)
 		}
 	}
 
-	m_offset[0]++;
-	m_offset[1]++;
+	m_offset.x++;
+	m_offset.y++;
 	return MS::kSuccess;
 }

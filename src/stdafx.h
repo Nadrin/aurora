@@ -7,12 +7,15 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
 #include <iostream>
+
+#ifndef __CUDACC__
+#include <cmath>
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#endif
 
 namespace gpu {
 #include <cuda_runtime.h>

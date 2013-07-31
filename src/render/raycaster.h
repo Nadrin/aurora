@@ -6,14 +6,16 @@
 #pragma once
 
 #include <core/raytracer.h>
+#include <util/geometry.h>
+#include <util/ray.h>
 
 namespace Aurora {
 
-class DebugPattern : public Raytracer
+class Raycaster : public Raytracer
 {
 public:
-	DebugPattern();
-	~DebugPattern();
+	Raycaster();
+	~Raycaster();
 
 	MStatus createFrame(const unsigned int width, const unsigned int height, Scene* scene, MDagPath& camera);
 	MStatus destroyFrame();
@@ -21,12 +23,15 @@ public:
 
 	MStatus   render(bool ipr);
 	RV_PIXEL* framebuffer();
-
+	
 protected:
-	Dim			m_size;
-	uint2		m_offset;
-	Rect		m_region;
-	RV_PIXEL*	m_framebuffer;
+	float4*	   m_pixels;
+	Geometry   m_geometry;
+	Ray*       m_rays;
+
+	RV_PIXEL*  m_framebuffer;
+	Rect       m_region;
+	Dim		   m_size;
 };
 
 } // Aurora

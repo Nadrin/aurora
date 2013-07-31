@@ -7,8 +7,10 @@
 
 namespace Aurora {
 
-static const float Infinity = 1000000.0f;
-static const float Epsilon  = 0.0001f;
+static const float __device__ Infinity = 1000000.0f;
+static const float __device__ Epsilon  = 0.0001f;
+static const float __device__ Pi       = 3.1415926536f;
+static const float __device__ Radian   = 0.0174532925f;
 
 #ifndef __CUDACC__
 typedef gpu::int2 int2;
@@ -27,6 +29,9 @@ template <typename T> inline T min(const T a, const T b)
 { return a < b ? a : b; }
 template <typename T> inline T max(const T a, const T b)
 { return a > b ? a : b; }
+
+inline float rsqrtf(const float x)
+{ return 1.0f / sqrtf(x); }
 
 inline float2 make_float2(const float x, const float y)
 { return gpu::make_float2(x, y); }
@@ -150,6 +155,11 @@ template <typename T> inline __host__ __device__ T normalize(const T& v)
 // Lerp
 template <typename T> inline __host__ __device__ T lerp(const T& a, const T& b, const float t)
 { return a + t*(b - a); }
+
+// Barycentric interpolate
+template <typename T> inline __host__ __device__ T bclerp(const T& a, const T& b, const T& c, 
+	const float u, const float v)
+{ return a + u * (b - a) + v * (c - a); }
 
 // Cross product
 inline __host__ __device__ float3 cross(const float3& a, const float3& b)

@@ -22,6 +22,12 @@
     <ClCompile Include="..\..\src\render\debugPattern.cpp">
       <Filter>Source Root\render</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\render\raycaster.cpp">
+      <Filter>Source Root\render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\raytracer.cpp">
+      <Filter>Source Root\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Root">
@@ -38,6 +44,9 @@
     </Filter>
     <Filter Include="Source Root\render">
       <UniqueIdentifier>{928ab9c5-ac65-4336-b3db-46c7b7d1f5ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Root\kernels">
+      <UniqueIdentifier>{8f485e60-bb2a-4617-bdeb-48a1c6e6401d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -74,10 +83,24 @@
     <ClInclude Include="..\..\src\render\debugPattern.h">
       <Filter>Source Root\render</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\render\raycaster.h">
+      <Filter>Source Root\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\kernels.h">
+      <Filter>Source Root\kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">
       <Filter>Source Root\maya</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\src\kernels\raycaster.cu">
+      <Filter>Source Root\kernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\kernels\common.cu">
+      <Filter>Source Root\kernels</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

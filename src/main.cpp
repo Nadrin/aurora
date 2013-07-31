@@ -34,7 +34,7 @@ MStatus initializePlugin(MObject obj)
 		return status;
 	}
 
-	if(!(status = Engine::instance()->initialialize(1)))
+	if(!(status = Engine::instance()->initialialize(0)))
 		return status;
 	return MS::kSuccess;
 }
