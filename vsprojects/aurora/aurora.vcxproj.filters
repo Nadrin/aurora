@@ -89,6 +89,9 @@
     <ClInclude Include="..\..\src\kernels\kernels.h">
       <Filter>Source Root\kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\util\transform.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">

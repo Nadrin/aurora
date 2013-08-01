@@ -48,6 +48,14 @@ inline float4 make_float4(const float3& v, const float w=0.0f)
 { return gpu::make_float4(v.x, v.y, v.z, w); }
 #endif
 
+// Unary operators
+inline __host__ __device__ float2 operator-(const float2& v)
+{ return make_float2(-v.x, -v.y); }
+inline __host__ __device__ float3 operator-(const float3& v)
+{ return make_float3(-v.x, -v.y, -v.z); }
+inline __host__ __device__ float4 operator-(const float4& v)
+{ return make_float4(-v.x, -v.y, -v.z, -v.w); }
+
 // Addition
 inline __host__ __device__ float2 operator+(const float2& a, const float b)
 { return make_float2(a.x + b, a.y + b); }

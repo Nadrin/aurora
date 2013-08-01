@@ -38,6 +38,7 @@
     <ClInclude Include="..\..\src\util\geometry.h" />
     <ClInclude Include="..\..\src\util\math.h" />
     <ClInclude Include="..\..\src\util\ray.h" />
+    <ClInclude Include="..\..\src\util\transform.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel" />

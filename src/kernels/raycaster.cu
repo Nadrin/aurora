@@ -25,7 +25,7 @@ __global__ static void cudaRaycastKernel(const unsigned int numRays, const Ray* 
 	float2 uv;
 
 	for(unsigned int i=0; i<geometry.count; i++) {
-		triangle.position(geometry.vertices + _offset);
+		triangle.readPoints(geometry.vertices + _offset);
 		if(ray.intersect(triangle, uv, _t) && _t < t) {
 			t = _t;
 			offset = _offset;
@@ -35,14 +35,17 @@ __global__ static void cudaRaycastKernel(const unsigned int numRays, const Ray* 
 	}
 
 	if(t < Infinity) {
-		normals.data(geometry.normals + offset);
+		normals.readValues(geometry.normals + offset);
 		const float3 L = make_float3(0.0f, 0.5f, 0.5f);
-		const float3 N = normalize(bclerp(normals.v1, normals.v2, normals.v3, uv.x, uv.y));
+		const float3 N = normalize(normals.v1);
+//		const float3 N = normalize(bclerp(normals.v1, normals.v2, normals.v3, uv.x, uv.y));
 		const float dotNL = dot(N, L);
 
-		color.x = dotNL;
-		color.y = dotNL;
-		color.z = dotNL;
+		if(dotNL > 0.0f) {
+			color.x = dotNL;
+			color.y = dotNL;
+			color.z = dotNL;
+		}
 	}
 	pixels[ray.id] = color;
 }

@@ -5,6 +5,7 @@
 
 #include <stdafx.h>
 #include <util/geometry.h>
+#include <kernels/kernels.h>
 
 using namespace Aurora;
 
@@ -52,6 +53,17 @@ bool Geometry::resizeStaging(const unsigned int n)
 	return true;
 }
 
+Geometry Geometry::convertToDevice() const
+{
+	Geometry dev;
+	dev.count = count;
+	dev.mode  = mode;
+	
+	gpu::cudaHostGetDevicePointer(&dev.vertices, vertices, 0);
+	gpu::cudaHostGetDevicePointer(&dev.normals, normals, 0);
+	return dev;
+}
+
 bool Geometry::resize(const unsigned int n, GeometryAllocMode allocMode)
 {
 	unsigned int _n = n + (n%2);
@@ -92,20 +104,28 @@ void Geometry::free()
 	initialize();
 }
 
-bool Geometry::copyToDevice(Geometry& other) const
+bool Geometry::copyToDevice(Geometry& dest) const
 {
 	if(mode != Geometry::AllocStaging)
 		return false;
 
-	float* deviceVertices;
-	float* deviceNormals;
-	gpu::cudaHostGetDevicePointer(&deviceVertices, vertices, 0);
-	gpu::cudaHostGetDevicePointer(&deviceNormals, normals, 0);
+	Geometry source = convertToDevice();
 
-	gpu::cudaMemcpy(other.vertices, deviceVertices,
+	gpu::cudaMemcpy(dest.vertices, source.vertices,
 		count * Geometry::TriangleSize, gpu::cudaMemcpyDeviceToDevice);
-	gpu::cudaMemcpy(other.normals, deviceNormals,
+	gpu::cudaMemcpy(dest.normals, source.normals,
 		count * Geometry::TriangleSize, gpu::cudaMemcpyDeviceToDevice);
+	return true;
+}
+
+bool Geometry::copyToDeviceTransform(Geometry& dest, const Transform* transforms, const unsigned int count) const
+{
+	if(mode != Geometry::AllocStaging)
+		return false;
+
+	Geometry source = convertToDevice();
+	cudaTransform(source, dest, transforms, count);
+	gpu::cudaDeviceSynchronize();
 	return true;
 }
 

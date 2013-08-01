@@ -38,3 +38,40 @@ __host__ void cudaGenerateRays(const Rect& region, const Camera& camera, Ray* ra
 	dim3 gridSize = make_grid(blockSize, dim3(size.x, size.y));
 	cudaGenerateRaysKernel<<<gridSize, blockSize>>>(size, camera, rays);
 }
+
+__global__ static void cudaTransformKernel(const Geometry source, Geometry dest, const Transform* transforms, const unsigned int objectCount)
+{
+	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	if(threadId > source.count)
+		return;
+
+	const Transform* xform = NULL;
+	for(unsigned int i=0; i<objectCount; i++) {
+		if(transforms[i].offset <= threadId)
+			xform = &transforms[i];
+	}
+	if(!xform) return;
+
+	Primitive sourcePrim, destPrim;
+
+	// Transform vertices
+	sourcePrim.readPoints(source.vertices + threadId * Geometry::TriangleParams);
+	destPrim.v1 = xform->getPoint(sourcePrim.v1);
+	destPrim.v2 = xform->getPoint(sourcePrim.v2);
+	destPrim.v3 = xform->getPoint(sourcePrim.v3);
+	destPrim.writePoints(dest.vertices + threadId * Geometry::TriangleParams);
+
+	// Transform normals
+	sourcePrim.readValues(source.normals + threadId * Geometry::TriangleParams);
+	destPrim.v1 = xform->getNormal(sourcePrim.v1);
+	destPrim.v2 = xform->getNormal(sourcePrim.v2);
+	destPrim.v3 = xform->getNormal(sourcePrim.v3);
+	destPrim.writeValues(dest.normals + threadId * Geometry::TriangleParams);
+}
+
+__host__ void cudaTransform(const Geometry& source, Geometry& dest, const Transform* transforms, const unsigned int objectCount)
+{
+	dim3 blockSize(256);
+	dim3 gridSize = make_grid(blockSize, dim3(source.count));
+	cudaTransformKernel<<<gridSize, blockSize>>>(source, dest, transforms, objectCount);
+}

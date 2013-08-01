@@ -32,7 +32,12 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 {
 	unsigned int primitiveCount  = 0;
 	std::vector<MObject> objects;
+	Transform* transforms;
 
+	if(gpu::cudaHostAlloc(&transforms, meshPaths.length() * sizeof(Transform), cudaHostAllocMapped) != gpu::cudaSuccess)
+		return status = MS::kInsufficientMemory;
+
+	unsigned int objectsCount = 0;
 	for(unsigned int i=0; i<meshPaths.length(); i++) {
 		MDagPath& dagPath = meshPaths[i];
 		MItMeshPolygon polyIterator(dagPath.node());
@@ -51,6 +56,12 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 		}
 
 		if(isValidObject) {
+			transforms[objectsCount].offset = primitiveCount;
+			transforms[objectsCount].size   = currentPrimitiveCount;
+			dagPath.inclusiveMatrix().get(transforms[objectsCount].worldMatrix);
+			dagPath.inclusiveMatrixInverse().transpose().get(transforms[objectsCount].normalMatrix);
+
+			objectsCount++;
 			primitiveCount += currentPrimitiveCount;
 			objects.push_back(dagPath.node());
 		}
@@ -59,10 +70,12 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 	Geometry buffer;
 	buffer.initialize();
 	if(!m_geometry.resize(primitiveCount, Geometry::AllocDefault)) {
+		gpu::cudaFreeHost(transforms);
 		return status = MS::kInsufficientMemory;
 	}
 	if(!buffer.resize(primitiveCount, Geometry::AllocStaging)) {
 		m_geometry.free();
+		gpu::cudaFreeHost(transforms);
 		return status = MS::kInsufficientMemory;
 	}
 
@@ -79,7 +92,7 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 			for(int i=0; i<numTriangles; i++) {
 				MPointArray positions;
 				MIntArray   indices;
-				polyIterator.getTriangle(i, positions, indices, MSpace::kWorld);
+				polyIterator.getTriangle(i, positions, indices);
 
 				// Store vertices (in format optimised for fast traversal)
 				for(int k=0; k<3; k++)
@@ -93,7 +106,7 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 				for(int k=0; k<3; k++) {
 					MVector normal;
 					
-					dagMesh.getFaceVertexNormal(polyIterator.index(), indices[k], normal, MSpace::kWorld);
+					dagMesh.getFaceVertexNormal(polyIterator.index(), indices[k], normal);
 					buffer.normals[normalOffset++] = (float)normal.x;
 					buffer.normals[normalOffset++] = (float)normal.y;
 					buffer.normals[normalOffset++] = (float)normal.z;
@@ -103,8 +116,10 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 	}
 
 	buffer.padToEven(primitiveCount);
-	buffer.copyToDevice(m_geometry);
+	buffer.copyToDeviceTransform(m_geometry, transforms, objectsCount);
 	buffer.free();
+
+	gpu::cudaFreeHost(transforms);
 	return status = MS::kSuccess;
 }
 
