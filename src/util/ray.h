@@ -6,7 +6,7 @@
 #pragma once
 
 #include <util/math.h>
-#include <util/geometry.h>
+#include <util/primitive.h>
 
 namespace Aurora {
 

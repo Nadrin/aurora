@@ -8,7 +8,7 @@
 namespace Aurora {
 
 static const float __device__ Infinity = 1000000.0f;
-static const float __device__ Epsilon  = 0.0001f;
+static const float __device__ Epsilon  = 0.0000001f;
 static const float __device__ Pi       = 3.1415926536f;
 static const float __device__ Radian   = 0.0174532925f;
 

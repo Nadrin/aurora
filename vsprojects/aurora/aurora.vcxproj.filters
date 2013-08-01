@@ -16,9 +16,6 @@
     <ClCompile Include="..\..\src\core\scene.cpp">
       <Filter>Source Root\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\util\geometry.cpp">
-      <Filter>Source Root\util</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\render\debugPattern.cpp">
       <Filter>Source Root\render</Filter>
     </ClCompile>
@@ -26,6 +23,9 @@
       <Filter>Source Root\render</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\raytracer.cpp">
+      <Filter>Source Root\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\geometry.cpp">
       <Filter>Source Root\core</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,9 +65,6 @@
     <ClInclude Include="..\..\src\core\scene.h">
       <Filter>Source Root\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\util\geometry.h">
-      <Filter>Source Root\util</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\util\camera.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
@@ -90,6 +87,12 @@
       <Filter>Source Root\kernels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\util\transform.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\geometry.h">
+      <Filter>Source Root\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\primitive.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
   </ItemGroup>

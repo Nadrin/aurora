@@ -5,11 +5,13 @@
 
 #pragma once
 
+#include <core/geometry.h>
+
 #include <util/math.h>
 #include <util/ray.h>
-#include <util/geometry.h>
 #include <util/camera.h>
 #include <util/transform.h>
+#include <util/primitive.h>
 
 #ifdef __CUDACC__
 inline dim3 make_grid(const dim3& blockSize, const dim3& domainSize)

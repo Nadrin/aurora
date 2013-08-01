@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\engine.cpp" />
+    <ClCompile Include="..\..\src\core\geometry.cpp" />
     <ClCompile Include="..\..\src\core\raytracer.cpp" />
     <ClCompile Include="..\..\src\core\scene.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
@@ -22,11 +23,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\src\util\geometry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\core\engine.h" />
+    <ClInclude Include="..\..\src\core\geometry.h" />
     <ClInclude Include="..\..\src\core\raytracer.h" />
     <ClInclude Include="..\..\src\core\scene.h" />
     <ClInclude Include="..\..\src\kernels\kernels.h" />
@@ -35,8 +36,8 @@
     <ClInclude Include="..\..\src\render\raycaster.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
     <ClInclude Include="..\..\src\util\camera.h" />
-    <ClInclude Include="..\..\src\util\geometry.h" />
     <ClInclude Include="..\..\src\util\math.h" />
+    <ClInclude Include="..\..\src\util\primitive.h" />
     <ClInclude Include="..\..\src\util\ray.h" />
     <ClInclude Include="..\..\src\util\transform.h" />
   </ItemGroup>

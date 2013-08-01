@@ -4,7 +4,7 @@
  */
 
 #include <stdafx.h>
-#include <util/geometry.h>
+#include <core/geometry.h>
 #include <kernels/kernels.h>
 
 using namespace Aurora;

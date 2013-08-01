@@ -9,7 +9,7 @@
 #include <maya/MDagPath.h>
 #include <maya/MDagPathArray.h>
 
-#include <util/geometry.h>
+#include <core/geometry.h>
 
 namespace Aurora {
 

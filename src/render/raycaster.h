@@ -6,7 +6,7 @@
 #pragma once
 
 #include <core/raytracer.h>
-#include <util/geometry.h>
+#include <core/geometry.h>
 #include <util/ray.h>
 
 namespace Aurora {
