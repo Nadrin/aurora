@@ -108,5 +108,8 @@
     <CudaCompile Include="..\..\src\kernels\common.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\src\kernels\rebuilder.cu">
+      <Filter>Source Root\kernels</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

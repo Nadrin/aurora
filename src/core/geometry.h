@@ -36,6 +36,8 @@ public:
 	bool copyToDeviceTransform(Geometry& other, const Transform* transforms, const unsigned int count) const;
 	bool padToEven(const unsigned int n);
 
+	bool rebuild();
+
 	static const size_t TriangleSize   = 9 * sizeof(float);
 	static const size_t TriangleParams = 9;
 };

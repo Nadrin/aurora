@@ -140,3 +140,8 @@ bool Geometry::padToEven(const unsigned int n)
 	memcpy(&normals[count-1], &normals[count-2], Geometry::TriangleSize);
 	return true;
 }
+
+bool Geometry::rebuild()
+{
+	return cudaRebuildNMH(*this);
+}

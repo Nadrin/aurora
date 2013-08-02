@@ -177,6 +177,24 @@ inline __host__ __device__ float3 cross(const float3& a, const float3& b)
 inline __host__ __device__ float3 reflect(const float3& i, const float3& n)
 { return i - 2.0f * n * dot(n, i); }
 
+// Integer log2
+inline __host__ __device__ unsigned int log2i(unsigned int x)
+{
+	unsigned int ret = (unsigned int)(-1);
+	while(x >>= 1) ret++;
+	return ret;
+}
+
+// Integer exp2
+inline __host__ __device__ unsigned int exp2(unsigned int x)
+{
+	if(!x) return 1;
+
+	unsigned int ret = 2;
+	while(--x) ret <<= 1;
+	return ret;
+}
+
 // Rectangular region helper class
 class Rect 
 {

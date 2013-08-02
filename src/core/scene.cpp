@@ -120,6 +120,10 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, MStatus& status)
 	buffer.free();
 
 	gpu::cudaFreeHost(transforms);
+
+	if(!m_geometry.rebuild())
+		return status = MS::kFailure;
+
 	return status = MS::kSuccess;
 }
 

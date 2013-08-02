@@ -29,3 +29,4 @@ inline dim3 make_grid(const dim3& blockSize, const dim3& domainSize)
 void cudaGenerateRays(const Aurora::Rect& region, const Aurora::Camera& camera, Aurora::Ray* rays);
 void cudaTransform(const Aurora::Geometry& geometry, Aurora::Geometry& dest, const Aurora::Transform* transforms, const unsigned int objectCount);
 void cudaRaycast(const unsigned int numRays, const Aurora::Ray* rays, const Aurora::Geometry& geometry, void* pixels);
+bool cudaRebuildNMH(Aurora::Geometry& geometry);

@@ -47,6 +47,7 @@
   <ItemGroup>
     <CudaCompile Include="..\..\src\kernels\common.cu" />
     <CudaCompile Include="..\..\src\kernels\raycaster.cu" />
+    <CudaCompile Include="..\..\src\kernels\rebuilder.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E1EEFE44-04CC-4882-B361-23C5A3F8C159}</ProjectGuid>
