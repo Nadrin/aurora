@@ -167,7 +167,7 @@ template <typename T> inline __host__ __device__ T lerp(const T& a, const T& b, 
 // Barycentric interpolate
 template <typename T> inline __host__ __device__ T bclerp(const T& a, const T& b, const T& c, 
 	const float u, const float v)
-{ return a + u * (b - a) + v * (c - a); }
+{ return (1.0f - u - v) * a + u * b + v * c; }
 
 // Cross product
 inline __host__ __device__ float3 cross(const float3& a, const float3& b)
@@ -189,13 +189,13 @@ inline __host__ __device__ unsigned int log2i(unsigned int x)
 }
 
 // Integer exp2
-inline __host__ __device__ unsigned int exp2(unsigned int x)
+inline __host__ __device__ unsigned int exp2i(unsigned int x)
 {
-	if(!x) return 1;
+	if(x==0) return 1;
 
 	unsigned int ret = 2;
 	while(--x) 
-		ret <<= 1;
+		ret *= 2;
 	return ret;
 }
 

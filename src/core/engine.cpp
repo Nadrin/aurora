@@ -161,7 +161,7 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 		return status;
 	}
 
-	status = update(true);
+	status = update(false);
 	m_raytracer->destroyFrame();
 
 	m_state = Engine::StateIdle;
@@ -172,6 +172,8 @@ MStatus Engine::update(bool clearBackground)
 {
 	if(!m_lock.tryLock())
 		return MS::kFailure;
+
+	gpu::cudaDeviceSynchronize();
 
 	MRenderView::startRender(m_window.right+1, m_window.top+1, !clearBackground, true);
 	MRenderView::updatePixels(m_window.left, m_window.right, m_window.bottom, m_window.top,

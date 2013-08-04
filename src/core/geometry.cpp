@@ -118,13 +118,13 @@ bool Geometry::copyToDevice(Geometry& dest) const
 	return true;
 }
 
-bool Geometry::copyToDeviceTransform(Geometry& dest, const Transform* transforms, const unsigned int count) const
+bool Geometry::copyToDeviceTransform(Geometry& dest, const Transform* transforms, const unsigned int objects) const
 {
 	if(mode != Geometry::AllocStaging)
 		return false;
 
 	Geometry source = convertToDevice();
-	cudaTransform(source, dest, transforms, count);
+	cudaTransform(source, dest, transforms, objects);
 	gpu::cudaDeviceSynchronize();
 	return true;
 }

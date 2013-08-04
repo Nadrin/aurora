@@ -36,7 +36,7 @@ __host__ void cudaGenerateRays(const Rect& region, const Camera& camera, Ray* ra
 {
 	uint2 size = make_uint2(region.right - region.left + 1, region.top - region.bottom + 1);
 
-	dim3 blockSize(32, 32);
+	dim3 blockSize(32, 16);
 	dim3 gridSize = make_grid(blockSize, dim3(size.x, size.y));
 	cudaGenerateRaysKernel<<<gridSize, blockSize>>>(size, camera, rays);
 }

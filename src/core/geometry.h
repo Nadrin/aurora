@@ -33,7 +33,7 @@ public:
 	void free();
 
 	bool copyToDevice(Geometry& other) const;
-	bool copyToDeviceTransform(Geometry& other, const Transform* transforms, const unsigned int count) const;
+	bool copyToDeviceTransform(Geometry& other, const Transform* transforms, const unsigned int objects) const;
 	bool padToEven(const unsigned int n);
 
 	bool rebuild();

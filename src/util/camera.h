@@ -20,8 +20,8 @@ public:
 		forward  = normalize(direction);
 		right    = cross(forward, _up);
 		up       = cross(right, forward);
-		tanfov.x = tanf(fov.x * 0.5f);
-		tanfov.y = tanf(fov.y * 0.5f);
+		tanfov.x = tanf(fov.x);
+		tanfov.y = tanf(fov.y);
 
 		this->aspect   = aspect;
 		this->position = position;

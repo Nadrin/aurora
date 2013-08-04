@@ -15,9 +15,6 @@ using namespace Aurora;
 
 #include <kernels/common.h>
 
-#define DEBUG_BEGIN try {
-#define DEBUG_END } catch(thrust::system_error& e) { std::cerr << "EXCEPTION: " << e.what() << std::endl; abort(); }
-
 struct Split 
 {
 	__host__ __device__ 
@@ -41,43 +38,13 @@ inline __device__ void calcPartition(const unsigned int N, unsigned int& L, unsi
 {
 	const unsigned int n = N / 2;
 	const unsigned int H = log2i(n);
-	const unsigned int s = exp2(H-1) - 1;
-	const unsigned int S = exp2(H) - 1;
-	const unsigned int O = max(0, (n-1) - s - S);
+	const unsigned int s = exp2i(H-1) - 1;
+	const unsigned int S = exp2i(H) - 1;
+	const unsigned int O = max(0, int((n-1) - s - S));
 
 	R = 2 * (s+O);
 	L = 2 * (n-1) - R;
 }
-
-#if 0
-__global__ static void dumpKernel(const unsigned int* values, const unsigned int count)
-{
-	for(unsigned int i=0; i<count; i++)
-		printf("%d ", values[i]);
-	printf("\n");
-}
-
-static void dump(const char* name, const unsigned int* values, const unsigned int count)
-{
-	printf("--- %s ---\n", name);
-	fflush(stdout);
-
-	dumpKernel<<<dim3(1), dim3(1)>>>(values, count);
-	cudaDeviceSynchronize();
-}
-
-__global__ static void dumpSplitsKernel(const Split* values, const unsigned int count)
-{
-	for(unsigned int i=0; i<count; i++)
-		printf("S(%d,%d)\n", values[i].index, values[i].size);
-}
-
-static void dumpSplits(const Split* values, const unsigned int count)
-{
-	dumpSplitsKernel<<<dim3(1), dim3(1)>>>(values, count);
-	cudaDeviceSynchronize();
-}
-#endif
 
 __global__ static void computeTriangleBounds(const Geometry geometry,
 	float* verticesMinX, float* verticesMinY, float* verticesMinZ,
@@ -101,11 +68,11 @@ __global__ static void computeTriangleBounds(const Geometry geometry,
 }
 
 __global__ static void swapMaxTriangle(const unsigned int count, const float* keys,
-	const unsigned int pendingSplits, const Split* splits,
-	unsigned int* indices, unsigned int* nodes)
+	const unsigned int pendingSplits, const Split* splits, unsigned int* indices,
+	const unsigned int doneNodes, unsigned int* nodes)
 {
-	const unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
-	if(index >= count || index < splits[0].index)
+	const unsigned int index = blockDim.x * blockIdx.x + threadIdx.x + 2*doneNodes;
+	if(index >= count)
 		return;
 
 	Split split;
@@ -141,8 +108,8 @@ __global__ static void updateNodes(const unsigned int count,
 	const unsigned int pendingSplits, const Split* splits,
 	const unsigned int doneNodes, unsigned int* nodes)
 {
-	const unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
-	if(index >= count || index < splits[0].index)
+	const unsigned int index = blockDim.x * blockIdx.x + threadIdx.x + 2*doneNodes;
+	if(index >= count)
 		return;
 
 	Split split;
@@ -195,15 +162,15 @@ __global__ static void applyIndices(const Geometry source, Geometry dest, const 
 		return;
 
 	Primitive buffer;
-	const unsigned int destIndex = indices[index];
+	const unsigned int position = indices[index];
 
 	// Copy vertices
-	buffer.readValues(source.vertices + index * Geometry::TriangleParams);
-	buffer.writeValues(dest.vertices + destIndex * Geometry::TriangleParams);
+	buffer.readValues(source.vertices + position * Geometry::TriangleParams);
+	buffer.writeValues(dest.vertices + index * Geometry::TriangleParams);
 
 	// Copy normals
-	buffer.readValues(source.normals + index * Geometry::TriangleParams);
-	buffer.writeValues(dest.normals + destIndex * Geometry::TriangleParams);
+	buffer.readValues(source.normals + position * Geometry::TriangleParams);
+	buffer.writeValues(dest.normals + index * Geometry::TriangleParams);
 }
 
 __host__ static void emitSplits(const unsigned int pendingSplits,
@@ -241,10 +208,6 @@ __host__ static void sortTriangles(const unsigned int count,
 	thrust::gather(permutation.begin(), permutation.end(), ptrNodes, tempi.begin());
 	thrust::stable_sort_by_key(tempi.begin(), tempi.end(), permutation.begin());
 
-	// Node interval sort
-//	thrust::copy(ptrNodes, ptrNodes + count, tempi.begin());
-//	thrust::stable_sort_by_key(tempi.begin(), tempi.end(), permutation.begin());
-
 	// Apply permutations to indices
 	thrust::copy(ptrIndices, ptrIndices + count, tempi.begin());
 	thrust::gather(permutation.begin(), permutation.end(), tempi.begin(), ptrIndices);
@@ -259,11 +222,12 @@ __host__ bool cudaRebuildNMH(Geometry& geometry)
 	const size_t numLevels = log2i(geometry.count / 2) + 1;
 	const size_t maxSplits = 1 << numLevels;
 
-	std::cerr << "LEVELS: " << numLevels << " SPLITS: " << maxSplits << std::endl;
-
 	// Result geometry
 	Geometry result;
 	result.initialize();
+
+	// Prefer L1 cache
+	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 
 	// Triangle indices
 	unsigned int* indices;
@@ -311,7 +275,7 @@ __host__ bool cudaRebuildNMH(Geometry& geometry)
 	dim3 gridSize, blockSize;
 
 	// Compute triangle bounds
-	blockSize = dim3(256);
+	blockSize = dim3(192);
 	gridSize  = make_grid(blockSize, dim3(geometry.count));
 	computeTriangleBounds<<<gridSize, blockSize>>>(geometry,
 		verticesMin[0], verticesMin[1], verticesMin[2],
@@ -319,37 +283,36 @@ __host__ bool cudaRebuildNMH(Geometry& geometry)
 
 	// Loop every level of the hierarchy
 	for(unsigned int i=0; i<numLevels; i++) {
-		//dump("PRESORT NODES", nodes, geometry.count);
-
 		// 1. Lexicographical sort
 		const float* keysMin = verticesMin[axis];
 		const float* keysMax = verticesMax[axis];
 		sortTriangles(geometry.count, keysMin, indices, nodes, permutation, tempi, tempf);
-		//dump("POSTSORT NODES", nodes, geometry.count);
 
-		//dumpSplits(inSplits, pendingSplits);
 		// Finish if on last level
 		if(i == numLevels-1)
 			break;
 
 		// 2. Find maximal triangle in every split
 		blockSize = dim3(256);
-		gridSize  = make_grid(blockSize, dim3(geometry.count));
-		swapMaxTriangle<<<gridSize, blockSize>>>(geometry.count, keysMax, pendingSplits, inSplits, indices, nodes);
+		gridSize  = make_grid(blockSize, dim3(geometry.count - 2*doneNodes));
+		swapMaxTriangle<<<gridSize, blockSize>>>(geometry.count, keysMax, pendingSplits, inSplits,
+			indices, doneNodes, nodes);
 
 		// 3. Update node values
 		blockSize = dim3(256);
-		gridSize  = make_grid(blockSize, dim3(geometry.count));
+		gridSize  = make_grid(blockSize, dim3(geometry.count - 2*doneNodes));
 		updateNodes<<<gridSize, blockSize>>>(geometry.count, pendingSplits, inSplits, doneNodes, nodes);
-		//dump("UPDATED NODES", nodes, geometry.count);
 
-		// 4. Emit new splits
-		emitSplits(pendingSplits, inSplits, outSplits, hptrGeneratedSplits, dptrGeneratedSplits);
+		if(i < max(0, int(numLevels-2))) {
+			// 4. Emit new splits
+			emitSplits(pendingSplits, inSplits, outSplits, hptrGeneratedSplits, dptrGeneratedSplits);
 
-		// 5. Prepare for next iteration
-		doneNodes    += pendingSplits;
-		pendingSplits = *hptrGeneratedSplits;
-		axis          = (axis + 1) % 3;
+			doneNodes    += pendingSplits;
+			pendingSplits = *hptrGeneratedSplits;
+		}
+
+		// 5. Increment axis
+		axis = (axis + 1) % 3;
 	}
 
 	// Free resources
@@ -363,48 +326,18 @@ __host__ bool cudaRebuildNMH(Geometry& geometry)
 		cudaFree(verticesMax[i]);
 	}
 
-#if 0
-	// Debug dump
-	unsigned int* hostIndices = (unsigned int*)malloc(geometry.count * sizeof(unsigned int));
-	float* hostVertices = (float*)malloc(geometry.count * Geometry::TriangleSize);
-	float* hostNormals = (float*)malloc(geometry.count * Geometry::TriangleSize);
-
-	cudaMemcpy(hostIndices, indices, geometry.count * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-	cudaMemcpy(hostVertices, geometry.vertices, geometry.count * Geometry::TriangleSize, cudaMemcpyDeviceToHost);
-	cudaMemcpy(hostNormals, geometry.normals, geometry.count * Geometry::TriangleSize, cudaMemcpyDeviceToHost);
-
-	FILE* f = fopen("D:\\debug.nmh", "w");
-	fprintf(f, "NMH %d\n", geometry.count);
-	for(unsigned int i=0; i<geometry.count; i++) {
-		Primitive vtx;
-		Primitive n;
-		vtx.readPoints(hostVertices + i * Geometry::TriangleParams);
-		n.readValues(hostNormals + i * Geometry::TriangleParams);
-
-		fprintf(f, "%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-			vtx.v1.x, vtx.v1.y, vtx.v1.z, n.v1.x, n.v1.y, n.v1.z,
-			vtx.v1.x, vtx.v2.y, vtx.v2.z, n.v2.x, n.v2.y, n.v2.z,
-			vtx.v1.x, vtx.v3.y, vtx.v3.z, n.v3.x, n.v3.y, n.v3.z);
-
-	}
-	for(unsigned int i=0; i<geometry.count; i+=2) {
-		fprintf(f, "%d %d\n", hostIndices[i], hostIndices[i+1]);
-	}
-	fclose(f);
-	free(hostNormals);
-	free(hostIndices);
-	free(hostVertices);
-#endif
 	// Apply indices
 	result.resize(geometry.count, Geometry::AllocDefault);
 
 	blockSize = dim3(256);
 	gridSize  = make_grid(blockSize, dim3(geometry.count));
 	applyIndices<<<gridSize, blockSize>>>(geometry, result, indices);
-
-	geometry.free();
 	cudaFree(indices);
 
+	geometry.free();
 	geometry = result;
+	
+	// Restore default cache setting
+	cudaDeviceSetCacheConfig(cudaFuncCachePreferNone);
 	return true;
 }

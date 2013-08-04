@@ -32,18 +32,19 @@ public:
 
 		if(det < Epsilon)
 			return false;
+		float invdet = 1.0f / det;
 
 		float3 T = pos - triangle.v1;
-		p.x      = dot(T, P);
-		if(p.x < 0.0f || p.x > det)
+		p.x      = dot(T, P) * invdet;
+		if(p.x < 0.0f || p.x > 1.0f)
 			return false;
 
 		float3 Q = cross(T, e1);
-		p.y      = dot(dir, Q);
-		if(p.y < 0.0f || p.x + p.y > det)
+		p.y      = dot(dir, Q) * invdet;
+		if(p.y < 0.0f || p.x + p.y > 1.0f)
 			return false;
 
-		t = dot(e2, Q) / det;
+		t = dot(e2, Q) * invdet;
 		return true;
 	}
 
