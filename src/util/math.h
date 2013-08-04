@@ -181,7 +181,10 @@ inline __host__ __device__ float3 reflect(const float3& i, const float3& n)
 inline __host__ __device__ unsigned int log2i(unsigned int x)
 {
 	unsigned int ret = (unsigned int)(-1);
-	while(x >>= 1) ret++;
+	while(x) {
+		x >>= 1;
+		ret++;
+	}
 	return ret;
 }
 
@@ -191,8 +194,17 @@ inline __host__ __device__ unsigned int exp2(unsigned int x)
 	if(!x) return 1;
 
 	unsigned int ret = 2;
-	while(--x) ret <<= 1;
+	while(--x) 
+		ret <<= 1;
 	return ret;
+}
+
+// Generic value swap
+template <typename T> inline __host__ __device__ void swap(T& a, T& b)
+{
+	T temp = a;
+	a = b;
+	b = temp;
 }
 
 // Rectangular region helper class

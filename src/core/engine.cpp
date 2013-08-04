@@ -41,7 +41,7 @@ MStatus Engine::initialialize(const int device)
 		std::cerr << "Aurora: Failed to set CUDA device: " << deviceNumber << std::endl;
 		return MS::kFailure;
 	}
-	gpu::cudaSetDeviceFlags(cudaDeviceScheduleAuto | cudaDeviceMapHost);
+	gpu::cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync | cudaDeviceMapHost);
 
 	MThreadAsync::init();
 

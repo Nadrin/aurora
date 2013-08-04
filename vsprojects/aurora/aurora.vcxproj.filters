@@ -95,6 +95,15 @@
     <ClInclude Include="..\..\src\util\primitive.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kernels\common.h">
+      <Filter>Source Root\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\stack.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\intersect.h">
+      <Filter>Source Root\kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">

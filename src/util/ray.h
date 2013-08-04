@@ -47,8 +47,32 @@ public:
 		return true;
 	}
 
+	__host__ __device__
+	inline bool intersect(const float2& slab, const int axis, float2& range) const
+	{
+		float _pos, _rdir;
+		switch(axis) {
+		case 0: _pos = pos.x; _rdir = 1.0f / dir.x; break;
+		case 1: _pos = pos.y; _rdir = 1.0f / dir.y; break;
+		case 2: _pos = pos.z; _rdir = 1.0f / dir.z; break;
+		}
+
+		const bool reverse = (_rdir < 0.0f);
+		
+		const float t0 = (slab.x - _pos) * _rdir;
+		range.x = (reverse || (t0 <= range.x)) ? range.x : t0;
+		range.y = (reverse && (t0 <  range.y)) ? t0 : range.y;
+
+		const float t1 = (slab.y - _pos) * _rdir;
+		range.x = (reverse && (t1 >  range.x)) ? t1 : range.x;
+		range.y = (reverse || (t1 >= range.y)) ? range.y : t1;
+
+		return ((range.x <= range.y) && (range.x <= t));
+	}
+
 	float3 pos;
 	float3 dir;
+	float2 uv;
 	float t;
 	unsigned int id;
 };

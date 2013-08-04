@@ -8,6 +8,8 @@
 
 using namespace Aurora;
 
+#include <kernels/common.h>
+
 __global__ static void cudaGenerateRaysKernel(const uint2 size, const Camera camera, Ray* rays)
 {
 	const unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;

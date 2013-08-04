@@ -8,6 +8,11 @@
 
 using namespace Aurora;
 
+#include <kernels/common.h>
+#include <kernels/intersect.h>
+
+#if 0
+
 __global__ static void cudaRaycastKernel(const unsigned int numRays, const Ray* rays, const Geometry geometry, float4* pixels)
 {
 	unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
@@ -49,10 +54,40 @@ __global__ static void cudaRaycastKernel(const unsigned int numRays, const Ray* 
 	}
 	pixels[ray.id] = color;
 }
+#endif
 
-void cudaRaycast(const unsigned int numRays, const Ray* rays, const Geometry& geometry, void* pixels)
+__global__ static void cudaRaycastKernel(const unsigned int numRays, const Geometry geometry, Ray* rays, float4* pixels)
+{
+	unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	if(threadId > numRays)
+		return;
+
+	float4 color = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	unsigned int triangleIndex;
+	Ray ray = rays[threadId];
+	ray.t   = Infinity;
+
+	if(intersect(geometry, ray, triangleIndex)) {
+		Primitive normals;
+		normals.readValues(geometry.normals + triangleIndex * Geometry::TriangleParams);
+
+		const float3 L = make_float3(0.0f, 0.5f, 0.5f);
+		const float3 N = normalize(normals.v1);
+		const float dotNL = dot(N, L);
+
+		if(dotNL > 0.0f) {
+			color.x = dotNL;
+			color.y = dotNL;
+			color.z = dotNL;
+		}
+	}
+	pixels[ray.id] = color;
+}
+
+void cudaRaycast(const unsigned int numRays, const Geometry& geometry, Ray* rays, void* pixels)
 {
 	dim3 blockSize(256);
 	dim3 gridSize = make_grid(blockSize, dim3(numRays));
-	cudaRaycastKernel<<<gridSize, blockSize>>>(numRays, rays, geometry, (float4*)pixels);
+	cudaRaycastKernel<<<gridSize, blockSize>>>(numRays, geometry, rays, (float4*)pixels);
 }
