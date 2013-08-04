@@ -49,6 +49,11 @@ MStatus Engine::initialialize(const int device)
 	m_scene     = new Scene();
 	m_raytracer = new Raycaster();
 
+	gpu::cudaEventCreate(&m_eventUpdate[0]);
+	gpu::cudaEventCreate(&m_eventUpdate[1]);
+	gpu::cudaEventCreate(&m_eventRender[0]);
+	gpu::cudaEventCreate(&m_eventRender[1]);
+
 	return MS::kSuccess;
 }
 
@@ -56,6 +61,11 @@ MStatus Engine::release()
 {
 	delete m_scene;
 	delete m_raytracer;
+
+	gpu::cudaEventDestroy(m_eventUpdate[0]);
+	gpu::cudaEventDestroy(m_eventUpdate[1]);
+	gpu::cudaEventDestroy(m_eventRender[0]);
+	gpu::cudaEventDestroy(m_eventRender[1]);
 
 	gpu::cudaDeviceReset();
 	MThreadAsync::release();
@@ -135,16 +145,19 @@ MStatus Engine::iprStop()
 MStatus Engine::render(unsigned int width, unsigned int height, const MString& camera)
 {
 	MStatus status;
+	float updateTime, renderTime;
 
 	if(m_state != Engine::StateIdle)
 		return MS::kFailure;
 	if(!Engine::getRenderingCamera(camera, m_camera))
 		return MS::kFailure;
 
+	gpu::cudaEventRecord(m_eventUpdate[0]);
 	if((status = m_scene->update(Scene::NodeAll)) != MS::kSuccess) {
 		m_state = Engine::StateIdle;
 		return status;
 	}
+	gpu::cudaEventRecord(m_eventUpdate[1]);
 
 	if(!m_raytracer->createFrame(width, height, m_scene, m_camera))
 		return MS::kFailure;
@@ -155,16 +168,23 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	m_raytracer->setRegion(m_window);
 	MRenderView::setCurrentCamera(m_camera);
 
+	gpu::cudaEventRecord(m_eventRender[0]);
 	if((status = m_raytracer->render(false)) != MS::kSuccess) {
 		m_raytracer->destroyFrame();
 		m_state = Engine::StateIdle;
 		return status;
 	}
+	gpu::cudaEventRecord(m_eventRender[1]);
 
 	status = update(false);
 	m_raytracer->destroyFrame();
 
 	m_state = Engine::StateIdle;
+
+	gpu::cudaEventElapsedTime(&updateTime, m_eventUpdate[0], m_eventUpdate[1]);
+	gpu::cudaEventElapsedTime(&renderTime, m_eventRender[0], m_eventRender[1]);
+	std::cerr << "[Aurora] Update time: " << updateTime << " ms" << std::endl;
+	std::cerr << "[Aurora] Render time: " << renderTime << " ms" << std::endl;
 	return status;
 }
 

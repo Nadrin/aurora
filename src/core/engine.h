@@ -57,6 +57,9 @@ protected:
 	MDagPath    m_camera;
 	MMutexLock  m_lock;
 	MMutexLock  m_pause;
+
+	gpu::cudaEvent_t m_eventUpdate[2];
+	gpu::cudaEvent_t m_eventRender[2];
 };
 
 } // Aurora
