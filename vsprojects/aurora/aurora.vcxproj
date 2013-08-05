@@ -89,7 +89,7 @@
     <LibraryPath>$(MAYA_LOCATION)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.mll</TargetExt>
@@ -131,15 +131,17 @@ copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Comman
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>_BOOL;NT_PLUGIN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
@@ -155,10 +157,11 @@ copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Comman
     <CudaCompile>
       <CodeGeneration>compute_20,sm_21</CodeGeneration>
       <GPUDebugInfo>false</GPUDebugInfo>
-      <PtxAsOptionV>true</PtxAsOptionV>
+      <PtxAsOptionV>false</PtxAsOptionV>
       <Include>$(SolutionDir)\src;%(Include)</Include>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <Defines>_BOOL;%(Defines)</Defines>
+      <Optimization>O2</Optimization>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

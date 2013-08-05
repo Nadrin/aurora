@@ -15,4 +15,5 @@
 #define AURORA_INITPROC    "auroraInit"
 #define AURORA_DESTROYPROC "auroraDestroy"
 
+#define AURORA_CPUYIELD_TIME  10
 #define AURORA_INTSTACK_DEPTH 20

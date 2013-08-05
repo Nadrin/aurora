@@ -152,6 +152,8 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	if(!Engine::getRenderingCamera(camera, m_camera))
 		return MS::kFailure;
 
+	std::cerr << "[Aurora] Rendering ..." << std::endl;
+
 	gpu::cudaEventRecord(m_eventUpdate[0]);
 	if((status = m_scene->update(Scene::NodeAll)) != MS::kSuccess) {
 		m_state = Engine::StateIdle;
@@ -209,16 +211,17 @@ MStatus Engine::update(bool clearBackground)
 MThreadRetVal Engine::renderThread(void* context)
 {
 	Engine* engine = (Engine*)context;
+
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	gpu::cudaSetDevice(engine->m_deviceID);
 
 	while(engine->m_state != Engine::StateIprStopped) {
 		engine->m_pause.lock();
 		engine->m_pause.unlock();
 
-		if(!engine->m_raytracer->render(true)) {
-			Sleep(1); // Yield CPU time
+		Sleep(AURORA_CPUYIELD_TIME);
+		if(!engine->m_raytracer->render(true))
 			continue;
-		}
 
 		if(engine->m_state == Engine::StateIprStopped)
 			break;
