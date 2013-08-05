@@ -98,7 +98,7 @@ __device__ bool intersect(const Geometry& geometry, Ray& ray, unsigned int& tria
 			fminf(min(vertices1, state.axis), min(vertices2, state.axis)),
 			fmaxf(max(vertices1, state.axis), max(vertices2, state.axis)));
 
-		if(!(ray.intersect(slab, state.axis, state.range) && state.range.x <= ray.t))
+		if(!ray.intersect(slab, state.axis, state.range))
 			continue;
 
 		Primitive triangle1, triangle2;
