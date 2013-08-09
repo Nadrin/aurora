@@ -7,7 +7,7 @@
 
 #include <util/math.h>
 #include <core/scene.h>
-#include <core/raytracer.h>
+#include <core/renderer.h>
 
 #include <maya/MStatus.h>
 #include <maya/MDagPath.h>
@@ -51,7 +51,7 @@ protected:
 	int         m_deviceID;
 	Rect		m_window;
 	Scene*      m_scene;
-	Raytracer*  m_raytracer;
+	Renderer*   m_renderer;
 	EngineState m_state;
 
 	MDagPath    m_camera;

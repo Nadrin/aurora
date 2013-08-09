@@ -15,7 +15,7 @@
 
 namespace Aurora {
 
-class Raytracer 
+class Renderer
 {
 public:
 	virtual MStatus createFrame(const unsigned int width, const unsigned int height, Scene* scene, MDagPath& camera) = 0;

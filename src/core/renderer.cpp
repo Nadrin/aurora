@@ -4,14 +4,14 @@
  */
 
 #include <stdafx.h>
-#include <core/raytracer.h>
+#include <core/renderer.h>
 #include <kernels/kernels.h>
 
 #include <maya/MFnCamera.h>
 
 using namespace Aurora;
 
-void Raytracer::generateRays(const MDagPath& camera, const Dim& size, const Rect& region, Ray* rays)
+void Renderer::generateRays(const MDagPath& camera, const Dim& size, const Rect& region, Ray* rays)
 {
 	MFnCamera dagCamera(camera);
 	MPoint camEyePoint   = dagCamera.eyePoint(MSpace::kWorld);

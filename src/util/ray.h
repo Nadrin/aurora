@@ -14,11 +14,11 @@ class Ray
 {
 public:
 	__host__ __device__
-	Ray() : t(Infinity), id(0)
+	Ray() : t(Infinity), id(0), weight(1.0f)
 	{ }
 
 	__host__ __device__ 
-	Ray(const float3& p, const float3& d) : t(Infinity), id(0)
+	Ray(const float3& p, const float3& d, const float w=1.0f) : t(Infinity), id(0), weight(w)
 	{ }
 
 	__host__ __device__
@@ -67,6 +67,7 @@ public:
 	float3 dir;
 	float2 uv;
 	float t;
+	float weight;
 	unsigned int id;
 };
 

@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include <core/raytracer.h>
+#include <core/renderer.h>
 #include <core/geometry.h>
 #include <util/ray.h>
 
 namespace Aurora {
 
-class Raycaster : public Raytracer
+class Raycaster : public Renderer
 {
 public:
 	Raycaster();

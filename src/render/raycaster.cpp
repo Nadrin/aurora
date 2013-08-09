@@ -39,7 +39,7 @@ MStatus Raycaster::createFrame(const unsigned int width, const unsigned int heig
 	m_region   = Rect(0, width-1, 0, height-1);
 	m_size     = Dim(width, height);
 
-	Raytracer::generateRays(camera, m_size, m_region, m_rays);
+	Renderer::generateRays(camera, m_size, m_region, m_rays);
 	return MS::kSuccess;
 }
 

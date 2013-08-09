@@ -15,7 +15,7 @@
 
 using namespace Aurora;
 
-Engine::Engine() : m_deviceID(-1), m_scene(NULL), m_raytracer(NULL), m_state(Engine::StateIdle)
+Engine::Engine() : m_deviceID(-1), m_scene(NULL), m_renderer(NULL), m_state(Engine::StateIdle)
 { }
 
 Engine::~Engine()
@@ -47,7 +47,7 @@ MStatus Engine::initialialize(const int device)
 
 	m_deviceID  = deviceNumber;
 	m_scene     = new Scene();
-	m_raytracer = new Raycaster();
+	m_renderer  = new Raycaster();
 
 	gpu::cudaEventCreate(&m_eventUpdate[0]);
 	gpu::cudaEventCreate(&m_eventUpdate[1]);
@@ -60,7 +60,7 @@ MStatus Engine::initialialize(const int device)
 MStatus Engine::release()
 {
 	delete m_scene;
-	delete m_raytracer;
+	delete m_renderer;
 
 	gpu::cudaEventDestroy(m_eventUpdate[0]);
 	gpu::cudaEventDestroy(m_eventUpdate[1]);
@@ -99,13 +99,13 @@ MStatus Engine::iprStart(unsigned int width, unsigned int height, const MString&
 	if(!Engine::getRenderingCamera(camera, m_camera))
 		return MS::kFailure;
 
-	if(!m_raytracer->createFrame(width, height, m_scene, m_camera))
+	if(!m_renderer->createFrame(width, height, m_scene, m_camera))
 		return MS::kFailure;
 
 	m_state  = Engine::StateIprRendering;
 	m_window = Rect(0, width-1, 0, height-1);
 
-	m_raytracer->setRegion(m_window);
+	m_renderer->setRegion(m_window);
 	m_pause.unlock();
 
 	MRenderView::setCurrentCamera(m_camera);
@@ -161,25 +161,25 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	}
 	gpu::cudaEventRecord(m_eventUpdate[1]);
 
-	if(!m_raytracer->createFrame(width, height, m_scene, m_camera))
+	if(!m_renderer->createFrame(width, height, m_scene, m_camera))
 		return MS::kFailure;
 
 	m_window = Rect(0, width-1, 0, height-1);
 	m_state  = Engine::StateRendering;
 
-	m_raytracer->setRegion(m_window);
+	m_renderer->setRegion(m_window);
 	MRenderView::setCurrentCamera(m_camera);
 
 	gpu::cudaEventRecord(m_eventRender[0]);
-	if((status = m_raytracer->render(false)) != MS::kSuccess) {
-		m_raytracer->destroyFrame();
+	if((status = m_renderer->render(false)) != MS::kSuccess) {
+		m_renderer->destroyFrame();
 		m_state = Engine::StateIdle;
 		return status;
 	}
 	gpu::cudaEventRecord(m_eventRender[1]);
 
 	status = update(false);
-	m_raytracer->destroyFrame();
+	m_renderer->destroyFrame();
 
 	m_state = Engine::StateIdle;
 
@@ -199,7 +199,7 @@ MStatus Engine::update(bool clearBackground)
 
 	MRenderView::startRender(m_window.right+1, m_window.top+1, !clearBackground, true);
 	MRenderView::updatePixels(m_window.left, m_window.right, m_window.bottom, m_window.top,
-		m_raytracer->framebuffer(), true);
+		m_renderer->framebuffer(), true);
 	MRenderView::endRender();
 
 	if(m_state == Engine::StateIprUpdate)
@@ -220,7 +220,7 @@ MThreadRetVal Engine::renderThread(void* context)
 		engine->m_pause.unlock();
 
 		Sleep(AURORA_CPUYIELD_TIME);
-		if(!engine->m_raytracer->render(true))
+		if(!engine->m_renderer->render(true))
 			continue;
 
 		if(engine->m_state == Engine::StateIprStopped)
@@ -235,7 +235,7 @@ MThreadRetVal Engine::renderThread(void* context)
 		}
 	}
 
-	engine->m_raytracer->destroyFrame();
+	engine->m_renderer->destroyFrame();
 	engine->m_state = Engine::StateIdle;
 	return 0;
 }

@@ -13,7 +13,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\core\engine.cpp" />
     <ClCompile Include="..\..\src\core\geometry.cpp" />
-    <ClCompile Include="..\..\src\core\raytracer.cpp" />
+    <ClCompile Include="..\..\src\core\renderer.cpp" />
     <ClCompile Include="..\..\src\core\scene.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\maya\renderCommand.cpp" />
@@ -28,7 +28,7 @@
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\core\engine.h" />
     <ClInclude Include="..\..\src\core\geometry.h" />
-    <ClInclude Include="..\..\src\core\raytracer.h" />
+    <ClInclude Include="..\..\src\core\renderer.h" />
     <ClInclude Include="..\..\src\core\scene.h" />
     <ClInclude Include="..\..\src\kernels\common.h" />
     <ClInclude Include="..\..\src\kernels\intersect.h" />

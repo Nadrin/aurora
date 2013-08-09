@@ -22,10 +22,10 @@
     <ClCompile Include="..\..\src\render\raycaster.cpp">
       <Filter>Source Root\render</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\raytracer.cpp">
+    <ClCompile Include="..\..\src\core\geometry.cpp">
       <Filter>Source Root\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\geometry.cpp">
+    <ClCompile Include="..\..\src\core\renderer.cpp">
       <Filter>Source Root\core</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,9 +74,6 @@
     <ClInclude Include="..\..\src\util\math.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\raytracer.h">
-      <Filter>Source Root\core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\render\debugPattern.h">
       <Filter>Source Root\render</Filter>
     </ClInclude>
@@ -103,6 +100,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\kernels\intersect.h">
       <Filter>Source Root\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\renderer.h">
+      <Filter>Source Root\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

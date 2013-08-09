@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include <core/raytracer.h>
+#include <core/renderer.h>
 
 namespace Aurora {
 
-class DebugPattern : public Raytracer
+class DebugPattern : public Renderer
 {
 public:
 	DebugPattern();
