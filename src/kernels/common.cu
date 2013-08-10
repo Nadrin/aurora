@@ -15,7 +15,7 @@ __global__ static void cudaGenerateRaysKernel(const uint2 size, const Camera cam
 	const unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
 	const unsigned int y = blockDim.y * blockIdx.y + threadIdx.y;
 
-	if(x > size.x || y > size.y)
+	if(x >= size.x || y >= size.y)
 		return;
 
 	const unsigned int rayID = y * size.x + x;

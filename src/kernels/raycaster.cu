@@ -14,7 +14,7 @@ using namespace Aurora;
 __global__ static void cudaRaycastKernel(const unsigned int numRays, const Geometry geometry, Ray* rays, float4* pixels)
 {
 	unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
-	if(threadId > numRays)
+	if(threadId >= numRays)
 		return;
 
 	float4 color = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
