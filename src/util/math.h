@@ -164,6 +164,10 @@ template <typename T> inline __host__ __device__ T normalize(const T& v)
 template <typename T> inline __host__ __device__ T lerp(const T& a, const T& b, const float t)
 { return a + t*(b - a); }
 
+// Clamp
+template <typename T> inline __host__ __device__ T clamp(const T& v, const T& a, const T& b)
+{ return max(min(v, b), a); }
+
 // Barycentric interpolate
 template <typename T> inline __host__ __device__ T bclerp(const T& a, const T& b, const T& c, 
 	const float u, const float v)

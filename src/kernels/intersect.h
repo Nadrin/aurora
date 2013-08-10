@@ -48,7 +48,7 @@ __device__ bool intersectAny(const Geometry& geometry, Ray& ray)
 			fminf(min(vertices1, state.axis), min(vertices2, state.axis)),
 			fmaxf(max(vertices1, state.axis), max(vertices2, state.axis)));
 
-		if(!(ray.intersect(slab, state.axis, state.range) && state.range.x <= ray.t))
+		if(!ray.intersect(slab, state.axis, state.range))
 			continue;
 
 		Primitive triangle1, triangle2;
@@ -58,9 +58,9 @@ __device__ bool intersectAny(const Geometry& geometry, Ray& ray)
 		float2 uv;
 		float t;
 
-		if(ray.intersect(triangle1, uv, t) && t < ray.t)
+		if(ray.intersect(triangle1, uv, t) && t > Epsilon && t < ray.t)
 			return true;
-		if(ray.intersect(triangle2, uv, t) && t < ray.t)
+		if(ray.intersect(triangle2, uv, t) && t > Epsilon && t < ray.t)
 			return true;
 
 		state.axis = (state.axis + 1) % 3;
@@ -108,13 +108,13 @@ __device__ bool intersect(const Geometry& geometry, Ray& ray, unsigned int& tria
 		float2 uv;
 		float t;
 
-		if(ray.intersect(triangle1, uv, t) && t < ray.t) {
+		if(ray.intersect(triangle1, uv, t) && t > Epsilon && t < ray.t) {
 			hit    = true;
 			ray.t  = t;
 			ray.uv = uv;
 			triangleIndex = state.index;
 		}
-		if(ray.intersect(triangle2, uv, t) && t < ray.t) {
+		if(ray.intersect(triangle2, uv, t) && t > Epsilon && t < ray.t) {
 			hit    = true;
 			ray.t  = t;
 			ray.uv = uv;
