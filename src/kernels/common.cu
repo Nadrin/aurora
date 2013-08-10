@@ -21,10 +21,11 @@ __global__ static void cudaGenerateRaysKernel(const uint2 size, const Camera cam
 	const unsigned int rayID = y * size.x + x;
 	const float2 plane  = make_float2(x / float(size.x) - 0.5f, y / float(size.y) - 0.5f);
 
-	Ray* r = &rays[rayID];
-	r->pos = camera.position;
-	r->t   = Infinity;
-	r->id  = rayID;
+	Ray* r    = &rays[rayID];
+	r->pos    = camera.position;
+	r->t      = Infinity;
+	r->weight = 1.0f;
+	r->id     = rayID;
 
 	r->dir = normalize(
 		  plane.x * camera.right * camera.tanfov.x
