@@ -15,6 +15,8 @@ using namespace Aurora;
 
 #include <kernels/common.h>
 
+#define REBUILDER_TPS_THRESHOLD 2048
+
 struct Split 
 {
 	__host__ __device__ 
@@ -46,6 +48,26 @@ inline __device__ void calcPartition(const unsigned int N, unsigned int& L, unsi
 	L = 2 * (n-1) - R;
 }
 
+inline __device__ unsigned int findSplit(const unsigned int index, const unsigned int pendingSplits,
+	const Split* splitArray, Split& outSplit)
+{
+	unsigned int imin = 0;
+	unsigned int imax = pendingSplits;
+	unsigned int outIndex;
+
+	while(imax >= imin) {
+		outIndex = (imin + imax) / 2;
+		outSplit = splitArray[outIndex];
+
+		if(index < outSplit.index)
+			imax = outIndex - 1;
+		else if(index > outSplit.index && index >= outSplit.index + outSplit.size)
+			imin = outIndex + 1;
+		else break;
+	}
+	return outIndex;
+}
+
 __global__ static void computeTriangleBounds(const Geometry geometry,
 	float* verticesMinX, float* verticesMinY, float* verticesMinZ,
 	float* verticesMaxX, float* verticesMaxY, float* verticesMaxZ)
@@ -67,20 +89,17 @@ __global__ static void computeTriangleBounds(const Geometry geometry,
 	verticesMaxZ[index] = fmaxf(fmaxf(vertices.v1.z, vertices.v2.z), vertices.v3.z);
 }
 
-__global__ static void swapMaxTriangle(const unsigned int count, const float* keys,
+__global__ static void swapMaxTriangleTPT(const unsigned int count, const float* keys,
 	const unsigned int pendingSplits, const Split* splits, unsigned int* indices,
 	const unsigned int doneNodes, unsigned int* nodes)
 {
-	const unsigned int index = blockDim.x * blockIdx.x + threadIdx.x + 2*doneNodes;
-	if(index >= count)
+	unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if(index >= count - 2*doneNodes)
 		return;
+	index = count - index - 1;
 
 	Split split;
-	for(unsigned int i=0; i<pendingSplits; i++) {
-		split = splits[i];
-		if(index >= split.index && index < split.index + split.size)
-			break;
-	}
+	findSplit(index, pendingSplits, splits, split);
 
 	if(index == split.index || index == split.index+1)
 		return;
@@ -104,7 +123,33 @@ __global__ static void swapMaxTriangle(const unsigned int count, const float* ke
 	}
 }
 
-__global__ static void updateNodes(const unsigned int count, 
+__global__ static void swapMaxTriangleTPS(const float* keys,
+	const unsigned int pendingSplits, const Split* splits,
+	unsigned int* indices, unsigned int* nodes)
+{
+	unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if(index >= pendingSplits)
+		return;
+
+	const Split split     = splits[index];
+	float maxValue        = keys[indices[split.index+1]];
+	unsigned int maxIndex = split.index+1;
+
+	for(unsigned int i=split.index+2; i<split.index+split.size; i++) {
+		const float value = keys[indices[i]];
+		if(value > maxValue) {
+			maxIndex = i;
+			maxValue = value;
+		}
+	}
+
+	if(maxIndex != split.index+1) {
+		swap(indices[split.index+1], indices[maxIndex]);
+		swap(nodes[split.index+1], nodes[maxIndex]);
+	}
+}
+
+__global__ static void updateNodesTPT(const unsigned int count,
 	const unsigned int pendingSplits, const Split* splits,
 	const unsigned int doneNodes, unsigned int* nodes)
 {
@@ -113,18 +158,31 @@ __global__ static void updateNodes(const unsigned int count,
 		return;
 
 	Split split;
-	unsigned int splitIndex;
-	for(splitIndex=0; splitIndex<pendingSplits; splitIndex++) {
-		split = splits[splitIndex];
-		if(index >= split.index && index < split.index + split.size)
-			break;
-	}
+	const unsigned int splitIndex = findSplit(index, pendingSplits, splits, split);
+	const unsigned int nodeIndex  = doneNodes + splitIndex;
 
-	unsigned int nodeIndex = doneNodes + splitIndex;
 	if(index < split.index+2)
 		nodes[index] = nodeIndex;
 	else
 		nodes[index] = 2*nodeIndex+1;
+}
+
+__global__ static void updateNodesTPS(
+	const unsigned int pendingSplits, const Split* splits,
+	const unsigned int doneNodes, unsigned int* nodes)
+{
+	const unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if(index >= pendingSplits)
+		return;
+
+	const Split split = splits[index];
+	const unsigned int nodeIndex = doneNodes + index;
+
+	nodes[split.index]   = nodeIndex;
+	nodes[split.index+1] = nodeIndex;
+	for(unsigned int i=split.index+2; i<split.index + split.size; i++) {
+		nodes[i] = 2*nodeIndex+1;
+	}
 }
 
 __global__ static void emitSplitsKernel(const unsigned int pendingSplits,
@@ -286,6 +344,7 @@ __host__ bool cudaRebuildNMH(Geometry& geometry)
 		// 1. Lexicographical sort
 		const float* keysMin = verticesMin[axis];
 		const float* keysMax = verticesMax[axis];
+
 		sortTriangles(geometry.count, keysMin, indices, nodes, permutation, tempi, tempf);
 
 		// Finish if on last level
@@ -294,14 +353,26 @@ __host__ bool cudaRebuildNMH(Geometry& geometry)
 
 		// 2. Find maximal triangle in every split
 		blockSize = dim3(256);
-		gridSize  = make_grid(blockSize, dim3(geometry.count - 2*doneNodes));
-		swapMaxTriangle<<<gridSize, blockSize>>>(geometry.count, keysMax, pendingSplits, inSplits,
-			indices, doneNodes, nodes);
+		if(pendingSplits <= REBUILDER_TPS_THRESHOLD) {
+			gridSize = make_grid(blockSize, dim3(geometry.count - 2*doneNodes));
+			swapMaxTriangleTPT<<<gridSize, blockSize>>>(geometry.count, keysMax, pendingSplits, inSplits,
+				indices, doneNodes, nodes);
+		}
+		else {
+			gridSize = make_grid(blockSize, dim3(pendingSplits));
+			swapMaxTriangleTPS<<<gridSize, blockSize>>>(keysMax, pendingSplits, inSplits, indices, nodes);
+		}
 
 		// 3. Update node values
 		blockSize = dim3(256);
-		gridSize  = make_grid(blockSize, dim3(geometry.count - 2*doneNodes));
-		updateNodes<<<gridSize, blockSize>>>(geometry.count, pendingSplits, inSplits, doneNodes, nodes);
+		if(pendingSplits <= REBUILDER_TPS_THRESHOLD) {
+			gridSize = make_grid(blockSize, dim3(geometry.count - 2*doneNodes));
+			updateNodesTPT<<<gridSize, blockSize>>>(geometry.count, pendingSplits, inSplits, doneNodes, nodes);
+		}
+		else {
+			gridSize = make_grid(blockSize, dim3(pendingSplits));
+			updateNodesTPS<<<gridSize, blockSize>>>(pendingSplits, inSplits, doneNodes, nodes);
+		}
 
 		if(i < max(0, int(numLevels-2))) {
 			// 4. Emit new splits
