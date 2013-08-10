@@ -12,9 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\engine.cpp" />
-    <ClCompile Include="..\..\src\core\geometry.cpp" />
     <ClCompile Include="..\..\src\core\renderer.cpp" />
     <ClCompile Include="..\..\src\core\scene.cpp" />
+    <ClCompile Include="..\..\src\data\geometry.cpp" />
+    <ClCompile Include="..\..\src\data\texture.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\maya\renderCommand.cpp" />
     <ClCompile Include="..\..\src\render\debugPattern.cpp" />
@@ -27,9 +28,10 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\core\engine.h" />
-    <ClInclude Include="..\..\src\core\geometry.h" />
     <ClInclude Include="..\..\src\core\renderer.h" />
     <ClInclude Include="..\..\src\core\scene.h" />
+    <ClInclude Include="..\..\src\data\geometry.h" />
+    <ClInclude Include="..\..\src\data\texture.h" />
     <ClInclude Include="..\..\src\kernels\common.h" />
     <ClInclude Include="..\..\src\kernels\intersect.h" />
     <ClInclude Include="..\..\src\kernels\kernels.h" />
@@ -37,10 +39,13 @@
     <ClInclude Include="..\..\src\render\debugPattern.h" />
     <ClInclude Include="..\..\src\render\raycaster.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
+    <ClInclude Include="..\..\src\util\bsdf.h" />
     <ClInclude Include="..\..\src\util\camera.h" />
+    <ClInclude Include="..\..\src\util\light.h" />
     <ClInclude Include="..\..\src\util\math.h" />
     <ClInclude Include="..\..\src\util\primitive.h" />
     <ClInclude Include="..\..\src\util\ray.h" />
+    <ClInclude Include="..\..\src\util\shader.h" />
     <ClInclude Include="..\..\src\util\stack.h" />
     <ClInclude Include="..\..\src\util\transform.h" />
   </ItemGroup>

@@ -21,6 +21,9 @@ public:
 
 	float* vertices;
 	float* normals;
+	float* texcoords;
+	unsigned short* ids;
+
 	unsigned int count;
 	GeometryAllocMode mode;
 protected:

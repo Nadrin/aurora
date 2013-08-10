@@ -22,11 +22,14 @@
     <ClCompile Include="..\..\src\render\raycaster.cpp">
       <Filter>Source Root\render</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\geometry.cpp">
-      <Filter>Source Root\core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\renderer.cpp">
       <Filter>Source Root\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\data\geometry.cpp">
+      <Filter>Source Root\data</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\data\texture.cpp">
+      <Filter>Source Root\data</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -47,6 +50,9 @@
     </Filter>
     <Filter Include="Source Root\kernels">
       <UniqueIdentifier>{8f485e60-bb2a-4617-bdeb-48a1c6e6401d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Root\data">
+      <UniqueIdentifier>{59be03b5-da40-4396-a014-071ccb82a016}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -86,9 +92,6 @@
     <ClInclude Include="..\..\src\util\transform.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\geometry.h">
-      <Filter>Source Root\core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\util\primitive.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
@@ -103,6 +106,21 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\renderer.h">
       <Filter>Source Root\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\data\geometry.h">
+      <Filter>Source Root\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\data\texture.h">
+      <Filter>Source Root\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\shader.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\light.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\bsdf.h">
+      <Filter>Source Root\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

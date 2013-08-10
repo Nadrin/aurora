@@ -18,7 +18,7 @@
 
 using namespace Aurora;
 
-Scene::Scene()
+Scene::Scene() : m_textures(NULL), m_shaders(NULL), m_lights(NULL)
 {
 	m_geometry.initialize();
 }

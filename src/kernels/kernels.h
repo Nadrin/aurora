@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <core/geometry.h>
+#include <data/geometry.h>
 
 #include <util/math.h>
 #include <util/ray.h>
