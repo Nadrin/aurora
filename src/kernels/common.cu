@@ -77,4 +77,7 @@ __host__ void cudaTransform(const Geometry& source, Geometry& dest, const Transf
 	dim3 blockSize(256);
 	dim3 gridSize = make_grid(blockSize, dim3(source.count));
 	cudaTransformKernel<<<gridSize, blockSize>>>(source, dest, transforms, objectCount);
+
+	cudaMemcpy(dest.texcoords, source.texcoords, source.count * Geometry::TriangleUVSize, cudaMemcpyDeviceToDevice);
+	cudaMemcpy(dest.shaders, source.shaders, source.count * sizeof(unsigned short), cudaMemcpyDeviceToDevice);
 }

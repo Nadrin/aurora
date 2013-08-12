@@ -10,7 +10,12 @@ namespace Aurora {
 class BSDF
 {
 public:
-
+	enum BSDFType {
+		BSDF_Lambert,
+		BSDF_Phong,
+		BSDF_Blinn,
+	};
+	BSDFType type;
 };
 
 } // Aurora

@@ -15,6 +15,8 @@ void Geometry::initialize()
 	mode     = Geometry::AllocEmpty;
 	vertices = NULL;
 	normals  = NULL;
+	texcoords= NULL;
+	shaders  = NULL;
 }
 
 bool Geometry::resizeDefault(const unsigned int n)
@@ -24,6 +26,10 @@ bool Geometry::resizeDefault(const unsigned int n)
 		if(gpu::cudaMalloc(&vertices, n * Geometry::TriangleSize) != gpu::cudaSuccess)
 			throw std::exception();
 		if(gpu::cudaMalloc(&normals, n * Geometry::TriangleSize) != gpu::cudaSuccess)
+			throw std::exception();
+		if(gpu::cudaMalloc(&texcoords, n * Geometry::TriangleUVSize) != gpu::cudaSuccess)
+			throw std::exception();
+		if(gpu::cudaMalloc(&shaders, n * sizeof(unsigned short)) != gpu::cudaSuccess)
 			throw std::exception();
 	} 
 	catch(const std::exception&)
@@ -44,6 +50,12 @@ bool Geometry::resizeStaging(const unsigned int n)
 		if(gpu::cudaHostAlloc(&normals, n * Geometry::TriangleSize,
 			cudaHostAllocMapped | cudaHostAllocWriteCombined) != gpu::cudaSuccess)
 			throw std::exception();
+		if(gpu::cudaHostAlloc(&texcoords, n * Geometry::TriangleUVSize,
+			cudaHostAllocMapped | cudaHostAllocWriteCombined) != gpu::cudaSuccess)
+			throw std::exception();
+		if(gpu::cudaHostAlloc(&shaders, n * sizeof(unsigned short),
+			cudaHostAllocMapped | cudaHostAllocWriteCombined) != gpu::cudaSuccess)
+			throw std::exception();
 	}
 	catch(const std::exception&)
 	{
@@ -61,6 +73,8 @@ Geometry Geometry::convertToDevice() const
 	
 	gpu::cudaHostGetDevicePointer(&dev.vertices, vertices, 0);
 	gpu::cudaHostGetDevicePointer(&dev.normals, normals, 0);
+	gpu::cudaHostGetDevicePointer(&dev.texcoords, texcoords, 0);
+	gpu::cudaHostGetDevicePointer(&dev.shaders, shaders, 0);
 	return dev;
 }
 
@@ -95,10 +109,14 @@ void Geometry::free()
 	case Geometry::AllocDefault:
 		gpu::cudaFree(vertices);
 		gpu::cudaFree(normals);
+		gpu::cudaFree(texcoords);
+		gpu::cudaFree(shaders);
 		break;
 	case Geometry::AllocStaging:
 		gpu::cudaFreeHost(vertices);
 		gpu::cudaFreeHost(normals);
+		gpu::cudaFreeHost(texcoords);
+		gpu::cudaFreeHost(shaders);
 		break;
 	}
 	initialize();
@@ -115,6 +133,10 @@ bool Geometry::copyToDevice(Geometry& dest) const
 		count * Geometry::TriangleSize, gpu::cudaMemcpyDeviceToDevice);
 	gpu::cudaMemcpy(dest.normals, source.normals,
 		count * Geometry::TriangleSize, gpu::cudaMemcpyDeviceToDevice);
+	gpu::cudaMemcpy(dest.texcoords, source.texcoords,
+		count * Geometry::TriangleUVSize, gpu::cudaMemcpyDeviceToDevice);
+	gpu::cudaMemcpy(dest.shaders, source.shaders,
+		count * sizeof(unsigned short), gpu::cudaMemcpyDeviceToDevice);
 	return true;
 }
 
@@ -138,6 +160,8 @@ bool Geometry::padToEven(const unsigned int n)
 
 	memcpy(&vertices[count-1], &vertices[count-2], Geometry::TriangleSize);
 	memcpy(&normals[count-1], &normals[count-2], Geometry::TriangleSize);
+	memcpy(&texcoords[count-1], &texcoords[count-2], Geometry::TriangleUVSize);
+	memcpy(&shaders[count-1], &shaders[count-2], sizeof(unsigned short));
 	return true;
 }
 

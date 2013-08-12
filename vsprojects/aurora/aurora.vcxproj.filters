@@ -31,6 +31,9 @@
     <ClCompile Include="..\..\src\data\texture.cpp">
       <Filter>Source Root\data</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\memory.cpp">
+      <Filter>Source Root\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Root">
@@ -120,6 +123,12 @@
       <Filter>Source Root\util</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\util\bsdf.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\memory.h">
+      <Filter>Source Root\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\array.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
   </ItemGroup>

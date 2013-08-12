@@ -11,6 +11,8 @@ using namespace Aurora;
 #include <kernels/common.h>
 #include <kernels/intersect.h>
 
+texture<float, 2, cudaReadModeElementType> texRef1; 
+
 __global__ static void cudaRaycastKernel(const unsigned int numRays, const Geometry geometry, Ray* rays, float4* pixels)
 {
 	unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;

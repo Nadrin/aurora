@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\engine.cpp" />
+    <ClCompile Include="..\..\src\core\memory.cpp" />
     <ClCompile Include="..\..\src\core\renderer.cpp" />
     <ClCompile Include="..\..\src\core\scene.cpp" />
     <ClCompile Include="..\..\src\data\geometry.cpp" />
@@ -28,6 +29,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\core\engine.h" />
+    <ClInclude Include="..\..\src\core\memory.h" />
     <ClInclude Include="..\..\src\core\renderer.h" />
     <ClInclude Include="..\..\src\core\scene.h" />
     <ClInclude Include="..\..\src\data\geometry.h" />
@@ -39,6 +41,7 @@
     <ClInclude Include="..\..\src\render\debugPattern.h" />
     <ClInclude Include="..\..\src\render\raycaster.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
+    <ClInclude Include="..\..\src\util\array.h" />
     <ClInclude Include="..\..\src\util\bsdf.h" />
     <ClInclude Include="..\..\src\util\camera.h" />
     <ClInclude Include="..\..\src\util\light.h" />

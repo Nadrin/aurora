@@ -7,11 +7,24 @@
 
 namespace Aurora {
 
+#ifndef __CUDACC__
+typedef gpu::cudaChannelFormatDesc cudaChannelFormatDesc;
+typedef gpu::cudaArray cudaArray;
+#endif
+
 class Texture
 {
 public:
-	__host__ bool load();
-	__host__ void free();
+	Texture();
+
+	bool load(const unsigned int w, const unsigned int h, const float* data);
+	void free();
+
+	unsigned int width;
+	unsigned int height;
+
+	cudaChannelFormatDesc channelDesc;
+	cudaArray* pixels;
 };
 
 } // Aurora

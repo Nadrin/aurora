@@ -22,7 +22,7 @@ public:
 	float* vertices;
 	float* normals;
 	float* texcoords;
-	unsigned short* ids;
+	unsigned short* shaders;
 
 	unsigned int count;
 	GeometryAllocMode mode;
@@ -43,6 +43,8 @@ public:
 
 	static const size_t TriangleSize   = 9 * sizeof(float);
 	static const size_t TriangleParams = 9;
+	static const size_t TriangleUVSize = 6 * sizeof(float);
+	static const size_t TriangleUVs    = 6;
 };
 
 } // Aurora

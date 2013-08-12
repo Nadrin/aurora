@@ -5,6 +5,11 @@
 
 #pragma once
 
+#ifndef __CUDACC__
+#include <maya/MColor.h>
+#include <maya/MVector.h>
+#endif
+
 namespace Aurora {
 
 static const float __device__ Infinity = 1000000.0f;
@@ -46,6 +51,14 @@ inline float4 make_float4(const float2& v, const float z=0.0f, const float w=0.0
 { return gpu::make_float4(v.x, v.y, z, w); }
 inline float4 make_float4(const float3& v, const float w=0.0f)
 { return gpu::make_float4(v.x, v.y, v.z, w); }
+
+inline float3 make_float3(const MColor& color)
+{ return gpu::make_float3(color.r, color.g, color.b); }
+inline float4 make_float4(const MColor& color)
+{ return gpu::make_float4(color.r, color.g, color.b, color.a); }
+
+inline float3 make_float3(const MVector& vector)
+{ return gpu::make_float3(float(vector.x), float(vector.y), float(vector.z)); }
 #endif
 
 // Unary operators

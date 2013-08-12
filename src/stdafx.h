@@ -8,6 +8,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <string>
+#include <map>
 
 #ifndef __CUDACC__
 #include <cmath>
@@ -17,8 +19,10 @@
 #include <Windows.h>
 #endif
 
+#ifndef __CUDACC__
 namespace gpu {
 #include <cuda_runtime.h>
 }
+#endif
 
 #include "config.h"

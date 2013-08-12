@@ -129,7 +129,7 @@ MStatus Engine::iprPause(bool pause)
 MStatus Engine::iprRefresh()
 {
 	m_lock.lock();
-	MStatus status = m_scene->update(Scene::NodeAll);
+	MStatus status = m_scene->update(Scene::UpdateFull);
 	m_lock.unlock();
 
 	return status;
@@ -155,7 +155,7 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	std::cerr << "[Aurora] Rendering ..." << std::endl;
 
 	gpu::cudaEventRecord(m_eventUpdate[0]);
-	if((status = m_scene->update(Scene::NodeAll)) != MS::kSuccess) {
+	if((status = m_scene->update(Scene::UpdateFull)) != MS::kSuccess) {
 		m_state = Engine::StateIdle;
 		return status;
 	}
