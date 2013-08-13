@@ -14,6 +14,9 @@ inline __host__ __device__ unsigned int getID(const unsigned int val)
 inline __host__ __device__ unsigned int setID(const unsigned int val)
 { return val+1; }
 
+inline __host__ __device__ unsigned int getSafeID(const unsigned int val)
+{ return val ? val-1 : 0; }
+
 template <class T, MemoryPolicy policy>
 class Array
 {

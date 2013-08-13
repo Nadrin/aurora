@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <util/array.h>
+
 namespace Aurora {
 
 class Light
@@ -12,5 +14,7 @@ class Light
 public:
 
 };
+
+typedef Array<Light, DeviceMemory>  LightsArray;
 
 } // Aurora

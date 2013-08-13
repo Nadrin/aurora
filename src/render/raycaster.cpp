@@ -35,7 +35,7 @@ MStatus Raycaster::createFrame(const unsigned int width, const unsigned int heig
 		return MS::kInsufficientMemory;
 	}
 
-	m_geometry = scene->geometry();
+	m_scene    = scene;
 	m_region   = Rect(0, width-1, 0, height-1);
 	m_size     = Dim(width, height);
 
@@ -63,7 +63,8 @@ MStatus Raycaster::setRegion(const Rect& region)
 
 MStatus Raycaster::render(bool ipr)
 {
-	cudaRaycast(m_size.width * m_size.height, m_geometry, m_rays, m_pixels);
+	cudaRaycast(m_scene->geometry(), m_scene->shaders(),
+		m_size.width * m_size.height, m_rays, m_pixels);
 	return MS::kSuccess;
 }
 

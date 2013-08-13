@@ -6,7 +6,7 @@
 #pragma once
 
 #include <core/renderer.h>
-#include <data/geometry.h>
+#include <core/scene.h>
 #include <util/ray.h>
 
 namespace Aurora {
@@ -26,7 +26,7 @@ public:
 	
 protected:
 	float4*	   m_pixels;
-	Geometry   m_geometry;
+	Scene*	   m_scene;
 	Ray*       m_rays;
 
 	RV_PIXEL*  m_framebuffer;

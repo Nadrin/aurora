@@ -5,7 +5,9 @@
 
 #pragma once
 
+#include <util/array.h>
 #include <util/bsdf.h>
+
 
 namespace Aurora {
 
@@ -24,5 +26,7 @@ public:
 	float3 ambientColor;
 	float  diffuse;
 };
+
+typedef Array<Shader, DeviceMemory> ShadersArray;
 
 } // Aurora

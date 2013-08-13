@@ -13,6 +13,9 @@
 #include <util/transform.h>
 #include <util/primitive.h>
 
+#include <util/shader.h>
+#include <util/light.h>
+
 // NVCC does not properly support namespaces thus kernel wrapper functions need to be defined outside of Aurora scope.
 
 // Common utility kernels
@@ -24,4 +27,5 @@ void cudaGenerateTB(const Aurora::Geometry& geometry);
 bool cudaRebuildNMH(Aurora::Geometry& geometry);
 
 // Rendering
-void cudaRaycast(const unsigned int numRays, const Aurora::Geometry& geometry, Aurora::Ray* rays, void* pixels);
+void cudaRaycast(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders,
+	const unsigned int numRays, Aurora::Ray* rays, void* pixels);

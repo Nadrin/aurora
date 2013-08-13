@@ -11,15 +11,14 @@ using namespace Aurora;
 #include <kernels/common.h>
 #include <kernels/intersect.h>
 
-texture<float, 2, cudaReadModeElementType> texRef1; 
-
-__global__ static void cudaRaycastKernel(const unsigned int numRays, const Geometry geometry, Ray* rays, float4* pixels)
+__global__ static void cudaRaycastKernel(const Geometry geometry, const ShadersArray shaders,
+	const unsigned int numRays, Ray* rays, float4* pixels)
 {
 	unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= numRays)
 		return;
 
-	float4 color = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float3 color = make_float3(0.0f, 0.0f, 0.0f);
 
 	unsigned int triangleIndex;
 	Ray ray = rays[threadId];
@@ -33,23 +32,24 @@ __global__ static void cudaRaycastKernel(const unsigned int numRays, const Geome
 		const float3 N = normalize(bclerp(normals.v1, normals.v2, normals.v3, ray.uv.x, ray.uv.y));
 		const float dotNL = dot(N, L);
 
-		color = make_float4(0.2f, 0.2f, 0.2f, 1.0f);
-		if(dotNL > 0.0f) {
-			color.x += dotNL;
-			color.y += dotNL;
-			color.z += dotNL;
-		}
+		const unsigned int shaderID = getSafeID(geometry.shaders[triangleIndex]);
+		const Shader shader = shaders[shaderID];
+		color = shader.ambientColor;
+		if(dotNL > 0.0f)
+			color = color + dotNL * shader.diffuse * shader.color;
 	}
 
-	color.x = clamp(color.x, 0.0f, 1.0f);
-	color.y = clamp(color.y, 0.0f, 1.0f);
-	color.z = clamp(color.z, 0.0f, 1.0f);
-	pixels[ray.id] = color;
+	pixels[ray.id] = make_float4(
+		clamp(color.x, 0.0f, 1.0f),
+		clamp(color.y, 0.0f, 1.0f),
+		clamp(color.z, 0.0f, 1.0f),
+		1.0f);
 }
 
-void cudaRaycast(const unsigned int numRays, const Geometry& geometry, Ray* rays, void* pixels)
+void cudaRaycast(const Geometry& geometry, const ShadersArray& shaders,
+	const unsigned int numRays, Ray* rays, void* pixels)
 {
 	dim3 blockSize(256);
 	dim3 gridSize = make_grid(blockSize, dim3(numRays));
-	cudaRaycastKernel<<<gridSize, blockSize>>>(numRays, geometry, rays, (float4*)pixels);
+	cudaRaycastKernel<<<gridSize, blockSize>>>(geometry, shaders, numRays, rays, (float4*)pixels);
 }

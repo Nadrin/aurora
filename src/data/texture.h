@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <util/array.h>
+
 namespace Aurora {
 
 #ifndef __CUDACC__
@@ -26,5 +28,7 @@ public:
 	cudaChannelFormatDesc channelDesc;
 	cudaArray* pixels;
 };
+
+typedef Array<Texture, HostMemory> TexturesArray;
 
 } // Aurora

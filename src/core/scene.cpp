@@ -8,11 +8,15 @@
 
 #include <vector>
 
+#include <maya/MObjectArray.h>
 #include <maya/MObjectHandle.h>
 #include <maya/MMatrix.h>
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
-#include <maya/MItDag.h>
+#include <maya/MDagPath.h>
+
+#include <maya/MItDependencyNodes.h>
+#include <maya/MFnDependencyNode.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MFnMesh.h>
 #include <maya/MItMeshPolygon.h>
@@ -74,17 +78,17 @@ void Scene::getLocalIndices(const MIntArray& polygonIndices, const MIntArray& tr
 	}
 }
 
-MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const ObjectHash& hShaders)
+MStatus Scene::updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders)
 {
 	unsigned int primitiveCount  = 0;
-	const unsigned int meshCount = meshPaths.length();
+	const unsigned int meshCount = nodes.length();
 
 	if(meshCount == 0) {
 		m_geometry.free();
 		return MS::kSuccess;
 	}
 
-	std::vector<MObject> objects;
+	MObjectArray objects;
 
 	Transform* transforms;
 	if(gpu::cudaHostAlloc(&transforms, meshCount * sizeof(Transform), cudaHostAllocMapped) != gpu::cudaSuccess)
@@ -92,8 +96,14 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const ObjectHash& hShaders
 
 	unsigned int objectsCount = 0;
 	for(unsigned int i=0; i<meshCount; i++) {
-		MDagPath& dagPath = meshPaths[i];
-		MItMeshPolygon polyIterator(dagPath.node());
+		const MObject node = nodes[i];
+
+		MDagPath dagPath;
+		MFnDagNode(node).getPath(dagPath);
+		if(dagPath.isInstanced())
+			continue;
+
+		MItMeshPolygon polyIterator(node);
 
 		unsigned int currentPrimitiveCount = 0;
 		bool isValidObject = true;
@@ -116,7 +126,7 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const ObjectHash& hShaders
 
 			objectsCount++;
 			primitiveCount += currentPrimitiveCount;
-			objects.push_back(dagPath.node());
+			objects.append(node);
 		}
 	}
 
@@ -135,9 +145,9 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const ObjectHash& hShaders
 	unsigned int vertexOffset   = 0;
 	unsigned int normalOffset   = 0;
 	unsigned int texcoordOffset = 0;
-	for(auto obj=objects.begin(); obj!=objects.end(); obj++) {
-		MFnMesh dagMesh(*obj);
-		MItMeshPolygon polyIterator(*obj);
+	for(unsigned int obj=0; obj<objects.length(); obj++) {
+		MFnMesh dagMesh(objects[obj]);
+		MItMeshPolygon polyIterator(objects[obj]);
 
 		for(; !polyIterator.isDone(); polyIterator.next()) {
 			MIntArray polygonIndices;
@@ -212,17 +222,17 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const ObjectHash& hShaders
 	return MS::kSuccess;
 }
 
-MStatus Scene::updateShaders(MDagPathArray& shaderPaths, const ObjectHash& hTextures, ObjectHash& hShaders)
+MStatus Scene::updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, ObjectHash& hShaders)
 {
-	m_shaders.resize(shaderPaths.length());
+	m_shaders.resize(nodes.length());
 	if(m_shaders.size == 0)
 		return MS::kSuccess;
 
 	Array<Shader, HostMemory> buffer;
 	buffer.resize(m_shaders.size);
 
-	for(unsigned int i=0; i<buffer.size; i++) {
-		const MObject node = shaderPaths[i].node();
+	for(unsigned int i=0; i<nodes.length(); i++) {
+		const MObject node = nodes[i];
 		const MFnLambertShader dagLambertShader(node);
 
 		buffer[i].color        = make_float3(dagLambertShader.color());
@@ -231,7 +241,7 @@ MStatus Scene::updateShaders(MDagPathArray& shaderPaths, const ObjectHash& hText
 
 		buffer[i].texture[Shader::ChannelColor] = getConnectedIndex(MFn::kFileTexture, MObjectHandle(node), "color", hTextures);
 		
-		switch(shaderPaths[i].apiType()) {
+		switch(node.apiType()) {
 		case MFn::kLambert:
 			{
 				buffer[i].bsdf.type = BSDF::BSDF_Lambert;
@@ -261,15 +271,15 @@ MStatus Scene::updateShaders(MDagPathArray& shaderPaths, const ObjectHash& hText
 	return MS::kSuccess;
 }
 
-MStatus Scene::updateTextures(MDagPathArray& texturePaths, ObjectHash& hTextures)
+MStatus Scene::updateTextures(MObjectArray& nodes, ObjectHash& hTextures)
 {
-	m_textures.resize(texturePaths.length());
+	m_textures.resize(nodes.length());
 	if(m_textures.size == 0)
 		return MS::kSuccess;
 
-	for(unsigned int i=0; i<texturePaths.length(); i++) {
-		MObject dagNode = texturePaths[i].node();
-		hTextures[MObjectHandle(dagNode).hashCode()] = setID(i);
+	for(unsigned int i=0; i<nodes.length(); i++) {
+		const MObject node = nodes[i];
+		hTextures[MObjectHandle(node).hashCode()] = setID(i);
 	}
 	return MS::kSuccess;
 }
@@ -278,43 +288,37 @@ MStatus Scene::update(UpdateType type)
 {
 	MStatus status;
 
-	MItDag   dagIterator(MItDag::kDepthFirst);
-	MDagPath dagPath;
+	MObjectArray meshes;
+	MObjectArray shaders;
+	MObjectArray textures;
 
-	MDagPathArray dagMeshes;
-	MDagPathArray dagShaders;
-	MDagPathArray dagTextures;
-
-	for(; !dagIterator.isDone(); dagIterator.next()) {
-		if(!dagIterator.getPath(dagPath))
+	MItDependencyNodes depIterator;
+	for(; !depIterator.isDone(); depIterator.next()) {
+		const MObject node = depIterator.thisNode();
+		
+		// Skip transform nodes
+		if(node.hasFn(MFn::kTransform))
 			continue;
 
-		// Instancing is not supported
-		if(dagPath.isInstanced())
-			continue;
-		// Only process shapes
-		if(dagPath.hasFn(MFn::kTransform))
-			continue;
-
-		// Shape node
-		if(dagPath.hasFn(MFn::kMesh))
-			dagMeshes.append(dagPath);
+		// Mesh shape node
+		if(node.hasFn(MFn::kMesh))
+			meshes.append(node);
 		// Shader node
-		if(dagPath.hasFn(MFn::kLambert))
-			dagShaders.append(dagPath);
+		if(node.hasFn(MFn::kLambert))
+			shaders.append(node);
 		// Texture node
-		if(dagPath.hasFn(MFn::kFileTexture))
-			dagTextures.append(dagPath);
+		if(node.hasFn(MFn::kFileTexture))
+			textures.append(node);
 	}
 
 	ObjectHash hShaders;
 	ObjectHash hTextures;
 
-	if(!(status = updateTextures(dagTextures, hTextures)))
+	if(!(status = updateTextures(textures, hTextures)))
 		return status;
-	if(!(status = updateShaders(dagShaders, hTextures, hShaders)))
+	if(!(status = updateShaders(shaders, hTextures, hShaders)))
 		return status;
-	if(!(status = updateMeshes(dagMeshes, hShaders)))
+	if(!(status = updateMeshes(meshes, hShaders)))
 		return status;
 
 	return MS::kSuccess;

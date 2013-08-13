@@ -7,8 +7,7 @@
 
 #include <maya/MStatus.h>
 #include <maya/MIntArray.h>
-#include <maya/MDagPath.h>
-#include <maya/MDagPathArray.h>
+#include <maya/MObjectArray.h>
 #include <maya/MObjectHandle.h>
 #include <maya/MFnDependencyNode.h>
 
@@ -26,10 +25,10 @@ typedef std::map<unsigned int, unsigned int> ObjectHash;
 class Scene
 {
 protected:
-	Geometry                    m_geometry;
-	Array<Texture, HostMemory>  m_textures;
-	Array<Shader, DeviceMemory> m_shaders;
-	Array<Light, DeviceMemory>  m_lights;
+	Geometry       m_geometry;
+	TexturesArray  m_textures;
+	ShadersArray   m_shaders;
+	LightsArray	   m_lights;
 public:
 	Scene();
 	~Scene();
@@ -40,12 +39,16 @@ public:
 	};
 
 	MStatus update(UpdateType type);
-	Geometry& geometry() { return m_geometry; }
+
+	Geometry&      geometry()	{ return m_geometry; }
+	TexturesArray& textures()	{ return m_textures; }
+	ShadersArray&  shaders()    { return m_shaders;  }
+	LightsArray&   lights()     { return m_lights;   }
 
 protected:
-	MStatus updateMeshes(MDagPathArray &meshPaths, const ObjectHash& hShaders);
-	MStatus updateShaders(MDagPathArray& shaderPaths, const ObjectHash& hTextures, ObjectHash& hShaders);
-	MStatus updateTextures(MDagPathArray& texturePaths, ObjectHash& hTextures);
+	MStatus updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders);
+	MStatus updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, ObjectHash& hShaders);
+	MStatus updateTextures(MObjectArray& nodes, ObjectHash& hTextures);
 
 	static unsigned int getConnectedIndex(const int type, const MObjectHandle& handle, const MString& attribute, const ObjectHash& hash);
 	static unsigned int getIndexByHandle(const MObjectHandle& handle, const ObjectHash& hash);
