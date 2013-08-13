@@ -11,12 +11,14 @@ using namespace Aurora;
 
 void Geometry::initialize()
 {
-	count    = 0;
-	mode     = Geometry::AllocEmpty;
-	vertices = NULL;
-	normals  = NULL;
-	texcoords= NULL;
-	shaders  = NULL;
+	count      = 0;
+	mode       = Geometry::AllocEmpty;
+	vertices   = NULL;
+	normals    = NULL;
+	texcoords  = NULL;
+	shaders    = NULL;
+	tangents   = NULL;
+	bitangents = NULL;
 }
 
 bool Geometry::resizeDefault(const unsigned int n)
@@ -30,6 +32,11 @@ bool Geometry::resizeDefault(const unsigned int n)
 		if(gpu::cudaMalloc(&texcoords, n * Geometry::TriangleUVSize) != gpu::cudaSuccess)
 			throw std::exception();
 		if(gpu::cudaMalloc(&shaders, n * sizeof(unsigned short)) != gpu::cudaSuccess)
+			throw std::exception();
+		
+		if(gpu::cudaMalloc(&tangents, n * Geometry::TriangleSize) != gpu::cudaSuccess)
+			throw std::exception();
+		if(gpu::cudaMalloc(&bitangents, n * Geometry::TriangleSize) != gpu::cudaSuccess)
 			throw std::exception();
 	} 
 	catch(const std::exception&)
@@ -111,6 +118,9 @@ void Geometry::free()
 		gpu::cudaFree(normals);
 		gpu::cudaFree(texcoords);
 		gpu::cudaFree(shaders);
+
+		gpu::cudaFree(tangents);
+		gpu::cudaFree(bitangents);
 		break;
 	case Geometry::AllocStaging:
 		gpu::cudaFreeHost(vertices);
@@ -168,4 +178,9 @@ bool Geometry::padToEven(const unsigned int n)
 bool Geometry::rebuild()
 {
 	return cudaRebuildNMH(*this);
+}
+
+void Geometry::generateTB()
+{
+	cudaGenerateTB(*this);
 }

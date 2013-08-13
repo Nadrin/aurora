@@ -207,6 +207,7 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const ObjectHash& hShaders
 		m_geometry.free();
 		return MS::kFailure;
 	}
+	m_geometry.generateTB();
 
 	return MS::kSuccess;
 }

@@ -24,6 +24,9 @@ public:
 	float* texcoords;
 	unsigned short* shaders;
 
+	float* tangents;
+	float* bitangents;
+
 	unsigned int count;
 	GeometryAllocMode mode;
 protected:
@@ -40,6 +43,7 @@ public:
 	bool padToEven(const unsigned int n);
 
 	bool rebuild();
+	void generateTB();
 
 	static const size_t TriangleSize   = 9 * sizeof(float);
 	static const size_t TriangleParams = 9;

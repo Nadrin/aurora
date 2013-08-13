@@ -22,7 +22,7 @@ public:
 	{ }
 
 	__host__ __device__
-	inline bool intersect(const Primitive& triangle, float2& p, float& t) const
+	inline bool intersect(const Primitive3& triangle, float2& p, float& t) const
 	{
 		float3 e1 = triangle.v2 - triangle.v1;
 		float3 e2 = triangle.v3 - triangle.v1;

@@ -26,7 +26,7 @@ __global__ static void cudaRaycastKernel(const unsigned int numRays, const Geome
 	ray.t   = Infinity;
 
 	if(intersect(geometry, ray, triangleIndex)) {
-		Primitive normals;
+		Primitive3 normals;
 		normals.readValues(geometry.normals + triangleIndex * Geometry::TriangleParams);
 
 		const float3 L = make_float3(0.0f, 0.5f, 0.5f);

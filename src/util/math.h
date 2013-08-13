@@ -166,7 +166,7 @@ inline __host__ __device__ float dot(const float4& a, const float4& b)
 { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
 
 // Length
-template <typename T> inline __host__ __device__ T length(const T& v)
+template <typename T> inline __host__ __device__ float length(const T& v)
 { return sqrtf(dot(v, v)); }
 
 // Normalize

@@ -51,7 +51,7 @@ __device__ bool intersectAny(const Geometry& geometry, Ray& ray)
 		if(!ray.intersect(slab, state.axis, state.range))
 			continue;
 
-		Primitive triangle1, triangle2;
+		Primitive3 triangle1, triangle2;
 		triangle1.readPoints(geometry.vertices + state.index * Geometry::TriangleParams);
 		triangle2.readPoints(geometry.vertices + (state.index+1) * Geometry::TriangleParams);
 
@@ -101,7 +101,7 @@ __device__ bool intersect(const Geometry& geometry, Ray& ray, unsigned int& tria
 		if(!ray.intersect(slab, state.axis, state.range))
 			continue;
 
-		Primitive triangle1, triangle2;
+		Primitive3 triangle1, triangle2;
 		triangle1.readPoints(geometry.vertices + state.index * Geometry::TriangleParams);
 		triangle2.readPoints(geometry.vertices + (state.index+1) * Geometry::TriangleParams);
 

@@ -76,7 +76,7 @@ __global__ static void computeTriangleBounds(const Geometry geometry,
 	if(index >= geometry.count)
 		return;
 
-	Primitive vertices;
+	Primitive3 vertices;
 	vertices.readPoints(geometry.vertices + index * Geometry::TriangleParams);
 
 	verticesMinX[index] = fminf(fminf(vertices.v1.x, vertices.v2.x), vertices.v3.x);
@@ -219,16 +219,28 @@ __global__ static void applyIndices(const Geometry source, Geometry dest, const 
 	if(index >= source.count)
 		return;
 
-	Primitive buffer;
 	const unsigned int position = indices[index];
+	{
+		Primitive3 buffer;
 
-	// Copy vertices
-	buffer.readValues(source.vertices + position * Geometry::TriangleParams);
-	buffer.writeValues(dest.vertices + index * Geometry::TriangleParams);
+		// Copy vertices
+		buffer.readValues(source.vertices + position * Geometry::TriangleParams);
+		buffer.writeValues(dest.vertices + index * Geometry::TriangleParams);
 
-	// Copy normals
-	buffer.readValues(source.normals + position * Geometry::TriangleParams);
-	buffer.writeValues(dest.normals + index * Geometry::TriangleParams);
+		// Copy normals
+		buffer.readValues(source.normals + position * Geometry::TriangleParams);
+		buffer.writeValues(dest.normals + index * Geometry::TriangleParams);
+	}
+
+	{
+		// Copy texture coordinates
+		Primitive2 buffer;
+		buffer.readValues(source.texcoords + position * Geometry::TriangleUVs);
+		buffer.writeValues(dest.texcoords + index * Geometry::TriangleUVs);
+	}
+
+	// Copy shader ID
+	dest.shaders[index] = source.shaders[position];
 }
 
 __host__ static void emitSplits(const unsigned int pendingSplits,

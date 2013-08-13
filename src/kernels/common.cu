@@ -10,6 +10,9 @@ using namespace Aurora;
 
 #include <kernels/common.h>
 
+static __device__ __constant__ float3 constUp;
+static __device__ __constant__ float3 constForward;
+
 __global__ static void cudaGenerateRaysKernel(const uint2 size, const Camera camera, Ray* rays)
 {
 	const unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
@@ -45,7 +48,7 @@ __host__ void cudaGenerateRays(const Rect& region, const Camera& camera, Ray* ra
 __global__ static void cudaTransformKernel(const Geometry source, Geometry dest, const Transform* transforms, const unsigned int objectCount)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
-	if(threadId > source.count)
+	if(threadId >= source.count)
 		return;
 
 	const Transform* xform = NULL;
@@ -55,7 +58,7 @@ __global__ static void cudaTransformKernel(const Geometry source, Geometry dest,
 	}
 	if(!xform) return;
 
-	Primitive sourcePrim, destPrim;
+	Primitive3 sourcePrim, destPrim;
 
 	// Transform vertices
 	sourcePrim.readPoints(source.vertices + threadId * Geometry::TriangleParams);
@@ -80,4 +83,50 @@ __host__ void cudaTransform(const Geometry& source, Geometry& dest, const Transf
 
 	cudaMemcpy(dest.texcoords, source.texcoords, source.count * Geometry::TriangleUVSize, cudaMemcpyDeviceToDevice);
 	cudaMemcpy(dest.shaders, source.shaders, source.count * sizeof(unsigned short), cudaMemcpyDeviceToDevice);
+}
+
+__global__ static void cudaGenerateTBKernel(const Geometry geometry)
+{
+	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	if(threadId >= geometry.count)
+		return;
+
+	Primitive3 normal;
+	Primitive3 result;
+
+	normal.readValues(geometry.normals + threadId * Geometry::TriangleParams);
+
+	// Calculate tangents
+	result.v1 = cross(normal.v1, constUp);
+	result.v2 = cross(normal.v2, constUp);
+	result.v3 = cross(normal.v3, constUp);
+
+	if(length(result.v1) < Epsilon)
+		result.v1 = cross(normal.v1, constForward);
+	if(length(result.v2) < Epsilon)
+		result.v2 = cross(normal.v2, constForward);
+	if(length(result.v3) < Epsilon)
+		result.v3 = cross(normal.v3, constForward);
+
+	result.writeValues(geometry.tangents + threadId * Geometry::TriangleParams);
+
+	// Calculate bitangents
+	result.v1 = cross(normal.v1, result.v1);
+	result.v2 = cross(normal.v2, result.v2);
+	result.v3 = cross(normal.v3, result.v3);
+
+	result.writeValues(geometry.bitangents + threadId * Geometry::TriangleParams);
+}
+
+__host__ void cudaGenerateTB(const Geometry& geometry)
+{
+	const float3 vecUp      = make_float3(0.0f, 1.0f, 0.0f);
+	const float3 vecForward = make_float3(0.0f, 0.0f, 1.0f);
+
+	cudaMemcpyToSymbol((const char*)&constUp, &vecUp, sizeof(float3), 0, cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol((const char*)&constForward, &vecForward, sizeof(float3), 0, cudaMemcpyHostToDevice);
+
+	dim3 blockSize(256);
+	dim3 gridSize = make_grid(blockSize, dim3(geometry.count));
+	cudaGenerateTBKernel<<<gridSize, blockSize>>>(geometry);
 }
