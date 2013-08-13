@@ -9,6 +9,7 @@
 #include <maya/MIntArray.h>
 #include <maya/MDagPath.h>
 #include <maya/MDagPathArray.h>
+#include <maya/MObjectHandle.h>
 #include <maya/MFnDependencyNode.h>
 
 #include <data/geometry.h>
@@ -20,7 +21,7 @@
 
 namespace Aurora {
 
-typedef std::map<std::string, unsigned int> IndexMap;
+typedef std::map<unsigned int, unsigned int> ObjectHash;
 
 class Scene
 {
@@ -42,12 +43,12 @@ public:
 	Geometry& geometry() { return m_geometry; }
 
 protected:
-	MStatus updateMeshes(MDagPathArray &meshPaths, const IndexMap& shaderMap);
-	MStatus updateShaders(MDagPathArray& shaderPaths, const IndexMap& textureMap, IndexMap& shaderMap);
-	MStatus updateTextures(MDagPathArray& texturePaths, IndexMap& textureMap);
+	MStatus updateMeshes(MDagPathArray &meshPaths, const ObjectHash& hShaders);
+	MStatus updateShaders(MDagPathArray& shaderPaths, const ObjectHash& hTextures, ObjectHash& hShaders);
+	MStatus updateTextures(MDagPathArray& texturePaths, ObjectHash& hTextures);
 
-	static unsigned int getConnectedNode(const int type, MFnDependencyNode& depNode, const MString& attribute, const IndexMap& map);
-	static unsigned int getNodeByName(const MString& name, const IndexMap& map);
+	static unsigned int getConnectedIndex(const int type, const MObjectHandle& handle, const MString& attribute, const ObjectHash& hash);
+	static unsigned int getIndexByHandle(const MObjectHandle& handle, const ObjectHash& hash);
 	static void         getLocalIndices(const MIntArray& polygonIndices, const MIntArray& triangleIndices, MIntArray& localIndices);
 };
 

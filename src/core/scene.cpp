@@ -8,6 +8,7 @@
 
 #include <vector>
 
+#include <maya/MObjectHandle.h>
 #include <maya/MMatrix.h>
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
@@ -36,28 +37,27 @@ Scene::~Scene()
 	m_geometry.free();
 }
 
-unsigned int Scene::getConnectedNode(const int type, MFnDependencyNode& depNode, const MString& attribute, const IndexMap& map)
+unsigned int Scene::getConnectedIndex(const int type, const MObjectHandle& handle, const MString& attribute, const ObjectHash& hash)
 {
 	MPlugArray connections;
 
-	const MPlug plug = depNode.findPlug(attribute);
+	const MPlug plug = MFnDependencyNode(handle.objectRef()).findPlug(attribute);
 	plug.connectedTo(connections, true, false);
 
 	for(unsigned int i=0; i<connections.length(); i++) {
 		if(connections[i].node().apiType() == type) {
-			const MFnDependencyNode conDepNode(connections[i].node());
-			const auto it = map.find(conDepNode.name().asChar());
-			if(it != map.end())
+			const auto it = hash.find(MObjectHandle(connections[i].node()).hashCode());
+			if(it != hash.end())
 				return it->second;
 		}
 	}
 	return 0;
 }
 
-unsigned int Scene::getNodeByName(const MString& name, const IndexMap& map)
+unsigned int Scene::getIndexByHandle(const MObjectHandle& handle, const ObjectHash& hash)
 {
-	const auto it = map.find(name.asChar());
-	if(it == map.end())
+	const auto it = hash.find(handle.hashCode());
+	if(it == hash.end())
 		return 0;
 	return it->second;
 }
@@ -74,7 +74,7 @@ void Scene::getLocalIndices(const MIntArray& polygonIndices, const MIntArray& tr
 	}
 }
 
-MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const IndexMap& shaderMap)
+MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const ObjectHash& hShaders)
 {
 	unsigned int primitiveCount  = 0;
 	const unsigned int meshCount = meshPaths.length();
@@ -187,16 +187,13 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const IndexMap& shaderMap)
 
 		MObjectArray dagShaders;
 		MIntArray indices;
+
 		dagMesh.getConnectedShaders(0, dagShaders, indices);
-
 		for(unsigned int i=0; i<indices.length(); i++) {
-			if(indices[i] == -1) {
+			if(indices[i] == -1)
 				buffer.shaders[i] = 0;
-				continue;
-			}
-
-			MFnDependencyNode depNode(dagShaders[indices[i]]);
-			buffer.shaders[i] = (unsigned short)getNodeByName(depNode.name(), shaderMap);
+			else
+				buffer.shaders[i] = (unsigned short)getIndexByHandle(MObjectHandle(dagShaders[indices[i]]), hShaders);
 		}
 	}
 
@@ -214,56 +211,56 @@ MStatus Scene::updateMeshes(MDagPathArray& meshPaths, const IndexMap& shaderMap)
 	return MS::kSuccess;
 }
 
-MStatus Scene::updateShaders(MDagPathArray& shaderPaths, const IndexMap& textureMap, IndexMap& shaderMap)
+MStatus Scene::updateShaders(MDagPathArray& shaderPaths, const ObjectHash& hTextures, ObjectHash& hShaders)
 {
 	m_shaders.resize(shaderPaths.length());
 	if(m_shaders.size == 0)
 		return MS::kSuccess;
 
-	Array<Shader, HostMemory> hostShaders;
-	hostShaders.resize(m_shaders.size);
+	Array<Shader, HostMemory> buffer;
+	buffer.resize(m_shaders.size);
 
-	for(unsigned int i=0; i<hostShaders.size; i++) {
-		MFnDependencyNode depNode(shaderPaths[i].node());
-		MFnLambertShader  dagLambertShader(shaderPaths[i].node());
+	for(unsigned int i=0; i<buffer.size; i++) {
+		const MObject node = shaderPaths[i].node();
+		const MFnLambertShader dagLambertShader(node);
 
-		hostShaders[i].color        = make_float3(dagLambertShader.color());
-		hostShaders[i].ambientColor = make_float3(dagLambertShader.ambientColor());
-		hostShaders[i].diffuse      = dagLambertShader.diffuseCoeff();
+		buffer[i].color        = make_float3(dagLambertShader.color());
+		buffer[i].ambientColor = make_float3(dagLambertShader.ambientColor());
+		buffer[i].diffuse      = dagLambertShader.diffuseCoeff();
 
-		hostShaders[i].texture[Shader::ChannelColor] = getConnectedNode(MFn::kFileTexture, depNode, "color", textureMap);
+		buffer[i].texture[Shader::ChannelColor] = getConnectedIndex(MFn::kFileTexture, MObjectHandle(node), "color", hTextures);
 		
 		switch(shaderPaths[i].apiType()) {
 		case MFn::kLambert:
 			{
-				hostShaders[i].bsdf.type = BSDF::BSDF_Lambert;
+				buffer[i].bsdf.type = BSDF::BSDF_Lambert;
 			}
 			break;
 		case MFn::kPhong:
 			{
-				MFnPhongShader dagPhongShader(shaderPaths[i].node());
-				hostShaders[i].bsdf.type = BSDF::BSDF_Phong;
+				MFnPhongShader dagPhongShader(node);
+				buffer[i].bsdf.type = BSDF::BSDF_Phong;
 			}
 			break;
 		case MFn::kBlinn:
 			{
-				MFnBlinnShader dagBlinnShader(shaderPaths[i].node());
-				hostShaders[i].bsdf.type = BSDF::BSDF_Blinn;
+				MFnBlinnShader dagBlinnShader(node);
+				buffer[i].bsdf.type = BSDF::BSDF_Blinn;
 			}
 			break;
 		default:
-			hostShaders[i].bsdf.type = BSDF::BSDF_Lambert;
+			buffer[i].bsdf.type = BSDF::BSDF_Lambert;
 			break;
 		}
 
-		shaderMap[depNode.name().asChar()] = setID(i);
+		hShaders[MObjectHandle(node).hashCode()] = setID(i);
 	}
 
-	hostShaders.copyToDevice(m_shaders);
+	buffer.copyToDevice(m_shaders);
 	return MS::kSuccess;
 }
 
-MStatus Scene::updateTextures(MDagPathArray& texturePaths, IndexMap& textureMap)
+MStatus Scene::updateTextures(MDagPathArray& texturePaths, ObjectHash& hTextures)
 {
 	m_textures.resize(texturePaths.length());
 	if(m_textures.size == 0)
@@ -271,9 +268,7 @@ MStatus Scene::updateTextures(MDagPathArray& texturePaths, IndexMap& textureMap)
 
 	for(unsigned int i=0; i<texturePaths.length(); i++) {
 		MObject dagNode = texturePaths[i].node();
-
-		MFnDependencyNode depNode(dagNode);
-		textureMap[depNode.name().asChar()] = setID(i);
+		hTextures[MObjectHandle(dagNode).hashCode()] = setID(i);
 	}
 	return MS::kSuccess;
 }
@@ -311,14 +306,14 @@ MStatus Scene::update(UpdateType type)
 			dagTextures.append(dagPath);
 	}
 
-	IndexMap shaderMap;
-	IndexMap textureMap;
+	ObjectHash hShaders;
+	ObjectHash hTextures;
 
-	if(!(status = updateTextures(dagTextures, textureMap)))
+	if(!(status = updateTextures(dagTextures, hTextures)))
 		return status;
-	if(!(status = updateShaders(dagShaders, textureMap, shaderMap)))
+	if(!(status = updateShaders(dagShaders, hTextures, hShaders)))
 		return status;
-	if(!(status = updateMeshes(dagMeshes, shaderMap)))
+	if(!(status = updateMeshes(dagMeshes, hShaders)))
 		return status;
 
 	return MS::kSuccess;
