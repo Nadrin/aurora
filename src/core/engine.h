@@ -13,6 +13,7 @@
 #include <maya/MDagPath.h>
 #include <maya/MThreadAsync.h>
 #include <maya/MMutexLock.h>
+#include <maya/MMessage.h>
 
 namespace Aurora {
 
@@ -38,6 +39,7 @@ protected:
 
 	static MStatus       getRenderingCamera(const MString& name, MDagPath& path);
 	static MThreadRetVal renderThread(void* context);
+	static void          freeResources(void* context);
 
 	enum EngineState {
 		StateIdle = 0,
@@ -57,6 +59,9 @@ protected:
 	MDagPath    m_camera;
 	MMutexLock  m_lock;
 	MMutexLock  m_pause;
+
+	MCallbackId m_sceneNewCallback;
+	MCallbackId m_sceneOpenCallback;
 
 	gpu::cudaEvent_t m_eventUpdate[2];
 	gpu::cudaEvent_t m_eventRender[2];

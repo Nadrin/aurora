@@ -363,3 +363,11 @@ MStatus Scene::update(UpdateType type)
 
 	return MS::kSuccess;
 }
+
+void Scene::free()
+{
+	m_geometry.free();
+	m_textures.resize(0);
+	m_shaders.resize(0);
+	m_lights.resize(0);
+}

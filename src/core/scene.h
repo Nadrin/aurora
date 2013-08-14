@@ -39,6 +39,7 @@ public:
 	};
 
 	MStatus update(UpdateType type);
+	void    free(); 
 
 	Geometry&      geometry()	{ return m_geometry; }
 	TexturesArray& textures()	{ return m_textures; }
