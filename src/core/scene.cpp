@@ -29,6 +29,8 @@
 #include <maya/MFnPhongShader.h>
 #include <maya/MFnBlinnShader.h>
 
+#include <maya/MFnLight.h>
+
 using namespace Aurora;
 
 Scene::Scene()
@@ -76,11 +78,6 @@ void Scene::getLocalIndices(const MIntArray& polygonIndices, const MIntArray& tr
 			}
 		}
 	}
-}
-
-static void dump(const MObject& obj)
-{
-	std::cerr << "NODE name: " << MFnDependencyNode(obj).name() << ", API type: " << obj.apiTypeStr() << ", HASH: " << MObjectHandle(obj).hashCode() << std::endl;
 }
 
 MStatus Scene::updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders)
@@ -299,6 +296,28 @@ MStatus Scene::updateTextures(MObjectArray& nodes, ObjectHash& hTextures)
 	return MS::kSuccess;
 }
 
+MStatus Scene::updateLights(MObjectArray& nodes)
+{
+	m_lights.resize(nodes.length());
+	if(m_lights.size == 0)
+		return MS::kSuccess;
+
+	Array<Light, HostMemory> buffer;
+	buffer.resize(m_lights.size);
+
+	for(unsigned int i=0; i<nodes.length(); i++) {
+		const MObject node = nodes[i];
+		const MFnLight dagLight(node);
+
+		buffer[i].color     = make_float3(dagLight.color());
+		buffer[i].intensity = dagLight.intensity();
+		buffer[i].samples   = dagLight.numShadowSamples();
+	}
+
+	buffer.copyToDevice(m_lights);
+	return MS::kSuccess;
+}
+
 MStatus Scene::update(UpdateType type)
 {
 	MStatus status;
@@ -306,6 +325,7 @@ MStatus Scene::update(UpdateType type)
 	MObjectArray meshes;
 	MObjectArray shaders;
 	MObjectArray textures;
+	MObjectArray lights;
 
 	MItDependencyNodes depIterator;
 	for(; !depIterator.isDone(); depIterator.next()) {
@@ -324,6 +344,9 @@ MStatus Scene::update(UpdateType type)
 		// Texture node
 		if(node.hasFn(MFn::kFileTexture))
 			textures.append(node);
+		// Light nodes
+		if(node.hasFn(MFn::kLight))
+			lights.append(node);
 	}
 
 	ObjectHash hShaders;
@@ -332,6 +355,8 @@ MStatus Scene::update(UpdateType type)
 	if(!(status = updateTextures(textures, hTextures)))
 		return status;
 	if(!(status = updateShaders(shaders, hTextures, hShaders)))
+		return status;
+	if(!(status = updateLights(lights)))
 		return status;
 	if(!(status = updateMeshes(meshes, hShaders)))
 		return status;

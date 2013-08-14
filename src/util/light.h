@@ -12,7 +12,9 @@ namespace Aurora {
 class Light
 {
 public:
-
+	float  intensity;
+	short  samples;
+	float3 color;
 };
 
 typedef Array<Light, DeviceMemory>  LightsArray;

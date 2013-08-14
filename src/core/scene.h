@@ -49,6 +49,7 @@ protected:
 	MStatus updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders);
 	MStatus updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, ObjectHash& hShaders);
 	MStatus updateTextures(MObjectArray& nodes, ObjectHash& hTextures);
+	MStatus updateLights(MObjectArray& nodes);
 
 	static unsigned int getConnectedIndex(const int type, const MObjectHandle& handle, const MString& attribute, const ObjectHash& hash);
 	static unsigned int getIndexByHandle(const MObjectHandle& handle, const ObjectHash& hash);
