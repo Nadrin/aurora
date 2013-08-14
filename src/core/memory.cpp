@@ -41,7 +41,8 @@ void Aurora::free(void* ptr, MemoryPolicy policy)
 		std::free(ptr);
 		break;
 	case DeviceMemory:
-		gpu::cudaFree(ptr);
+		if(ptr)
+			gpu::cudaFree(ptr);
 		break;
 	}
 }

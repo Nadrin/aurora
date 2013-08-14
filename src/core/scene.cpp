@@ -78,6 +78,11 @@ void Scene::getLocalIndices(const MIntArray& polygonIndices, const MIntArray& tr
 	}
 }
 
+static void dump(const MObject& obj)
+{
+	std::cerr << "NODE name: " << MFnDependencyNode(obj).name() << ", API type: " << obj.apiTypeStr() << ", HASH: " << MObjectHandle(obj).hashCode() << std::endl;
+}
+
 MStatus Scene::updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders)
 {
 	unsigned int primitiveCount  = 0;
@@ -145,10 +150,22 @@ MStatus Scene::updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders)
 	unsigned int vertexOffset   = 0;
 	unsigned int normalOffset   = 0;
 	unsigned int texcoordOffset = 0;
+	unsigned int shaderOffset   = 0;
+
 	for(unsigned int obj=0; obj<objects.length(); obj++) {
 		MFnMesh dagMesh(objects[obj]);
-		MItMeshPolygon polyIterator(objects[obj]);
+		
+		MObjectArray shaderGroups;
+		MPlugArray shaderPlugs;
+		MIntArray  shaderIDs;
 
+		dagMesh.getConnectedShaders(0, shaderGroups, shaderIDs);
+		for(unsigned int i=0; i<shaderGroups.length(); i++) {
+			const MPlug surfaceShader = MFnDependencyNode(shaderGroups[i]).findPlug("surfaceShader");
+			surfaceShader.connectedTo(shaderPlugs, true, false);
+		}
+
+		MItMeshPolygon polyIterator(objects[obj]);
 		for(; !polyIterator.isDone(); polyIterator.next()) {
 			MIntArray polygonIndices;
 			polyIterator.getVertices(polygonIndices);
@@ -192,18 +209,16 @@ MStatus Scene::updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders)
 						buffer.texcoords[texcoordOffset++] = 0.0f;
 					}
 				}
+
+				// Store shader indices
+				const unsigned int polygonIndex = polyIterator.index();
+				if(shaderIDs[polygonIndex] == -1)
+					buffer.shaders[shaderOffset++] = 0;
+				else {
+					buffer.shaders[shaderOffset++] = 
+						(unsigned short)getIndexByHandle(MObjectHandle(shaderPlugs[shaderIDs[polygonIndex]].node()), hShaders);
+				}
 			}
-		}
-
-		MObjectArray dagShaders;
-		MIntArray indices;
-
-		dagMesh.getConnectedShaders(0, dagShaders, indices);
-		for(unsigned int i=0; i<indices.length(); i++) {
-			if(indices[i] == -1)
-				buffer.shaders[i] = 0;
-			else
-				buffer.shaders[i] = (unsigned short)getIndexByHandle(MObjectHandle(dagShaders[indices[i]]), hShaders);
 		}
 	}
 
