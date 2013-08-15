@@ -63,7 +63,7 @@ MStatus Raycaster::setRegion(const Rect& region)
 
 MStatus Raycaster::render(bool ipr)
 {
-	cudaRaycast(m_scene->geometry(), m_scene->shaders(),
+	cudaRaycast(m_scene->geometry(), m_scene->shaders(), m_scene->lights(),
 		m_size.width * m_size.height, m_rays, m_pixels);
 	return MS::kSuccess;
 }

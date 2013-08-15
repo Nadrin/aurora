@@ -40,6 +40,9 @@ public:
 	__host__
 	bool resize(const size_t count)
 	{
+		if(count == size)
+			return true;
+
 		free(items, policy);
 
 		if(count > 0) {

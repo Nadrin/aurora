@@ -55,12 +55,12 @@ __device__ bool intersectAny(const Geometry& geometry, Ray& ray)
 		triangle1.readPoints(geometry.vertices + state.index * Geometry::TriangleParams);
 		triangle2.readPoints(geometry.vertices + (state.index+1) * Geometry::TriangleParams);
 
-		float2 uv;
+		float u, v;
 		float t;
 
-		if(ray.intersect(triangle1, uv, t) && t > Epsilon && t < ray.t)
+		if(ray.intersect(triangle1, u, v, t) && t > Epsilon && t < ray.t)
 			return true;
-		if(ray.intersect(triangle2, uv, t) && t > Epsilon && t < ray.t)
+		if(ray.intersect(triangle2, u, v, t) && t > Epsilon && t < ray.t)
 			return true;
 
 		state.axis = (state.axis + 1) % 3;
@@ -105,19 +105,21 @@ __device__ bool intersect(const Geometry& geometry, Ray& ray, unsigned int& tria
 		triangle1.readPoints(geometry.vertices + state.index * Geometry::TriangleParams);
 		triangle2.readPoints(geometry.vertices + (state.index+1) * Geometry::TriangleParams);
 
-		float2 uv;
+		float u, v;
 		float t;
 
-		if(ray.intersect(triangle1, uv, t) && t > Epsilon && t < ray.t) {
+		if(ray.intersect(triangle1, u, v, t) && t > Epsilon && t < ray.t) {
 			hit    = true;
 			ray.t  = t;
-			ray.uv = uv;
+			ray.u  = u;
+			ray.v  = v;
 			triangleIndex = state.index;
 		}
-		if(ray.intersect(triangle2, uv, t) && t > Epsilon && t < ray.t) {
+		if(ray.intersect(triangle2, u, v, t) && t > Epsilon && t < ray.t) {
 			hit    = true;
 			ray.t  = t;
-			ray.uv = uv;
+			ray.u  = u;
+			ray.v  = v;
 			triangleIndex = state.index+1;
 		}
 

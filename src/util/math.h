@@ -8,6 +8,7 @@
 #ifndef __CUDACC__
 #include <maya/MColor.h>
 #include <maya/MVector.h>
+#include <maya/MFloatVector.h>
 #endif
 
 namespace Aurora {
@@ -59,6 +60,8 @@ inline float4 make_float4(const MColor& color)
 
 inline float3 make_float3(const MVector& vector)
 { return gpu::make_float3(float(vector.x), float(vector.y), float(vector.z)); }
+inline float3 make_float3(const MFloatVector& vector)
+{ return gpu::make_float3(vector.x, vector.y, vector.z); }
 #endif
 
 // Unary operators

@@ -219,8 +219,11 @@ MStatus Engine::update(bool clearBackground)
 		m_renderer->framebuffer(), true);
 	MRenderView::endRender();
 
-	if(m_state == Engine::StateIprUpdate)
+	if(m_state == Engine::StateIprUpdate) {
+		m_scene->update(Scene::UpdateIpr);
 		m_state = Engine::StateIprRendering;
+	}
+
 	m_lock.unlock();
 	return MS::kSuccess;
 }

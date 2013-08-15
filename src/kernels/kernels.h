@@ -27,5 +27,5 @@ void cudaGenerateTB(const Aurora::Geometry& geometry);
 bool cudaRebuildNMH(Aurora::Geometry& geometry);
 
 // Rendering
-void cudaRaycast(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders,
+void cudaRaycast(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, const Aurora::LightsArray& lights,
 	const unsigned int numRays, Aurora::Ray* rays, void* pixels);

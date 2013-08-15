@@ -11,6 +11,7 @@
 #include <maya/MObjectArray.h>
 #include <maya/MObjectHandle.h>
 #include <maya/MMatrix.h>
+#include <maya/MTransformationMatrix.h>
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
 #include <maya/MDagPath.h>
@@ -312,6 +313,44 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 		buffer[i].color     = make_float3(dagLight.color());
 		buffer[i].intensity = dagLight.intensity();
 		buffer[i].samples   = dagLight.numShadowSamples();
+
+		if(node.apiType() == MFn::kPointLight || node.apiType() == MFn::kAreaLight) {
+			MDagPath dagPath;
+			dagLight.getPath(dagPath);
+			buffer[i].position = make_float3(MTransformationMatrix(dagPath.inclusiveMatrix()).getTranslation(MSpace::kWorld));
+		}
+
+		switch(node.apiType()) {
+		case MFn::kAmbientLight:
+			{
+				buffer[i].type = Light::AmbientLight;
+			}
+			break;
+		case MFn::kPointLight:
+			{
+				buffer[i].type = Light::PointLight;
+			}
+			break;
+		case MFn::kDirectionalLight:
+			{
+				buffer[i].type      = Light::DirectionalLight;
+				buffer[i].direction = make_float3(dagLight.lightDirection(0, MSpace::kWorld));
+			}
+			break;
+		case MFn::kAreaLight:
+			{
+				buffer[i].type      = Light::AreaLight;
+				buffer[i].direction = make_float3(dagLight.lightDirection(0, MSpace::kWorld));
+			}
+			break;
+		default:
+			{
+				buffer[i].type      = Light::AmbientLight;
+				buffer[i].intensity = 0.0f;
+				buffer[i].samples   = 1;
+			}
+			break;
+		}
 	}
 
 	buffer.copyToDevice(m_lights);
@@ -336,14 +375,15 @@ MStatus Scene::update(UpdateType type)
 			continue;
 
 		// Mesh shape node
-		if(node.hasFn(MFn::kMesh))
+		if(node.hasFn(MFn::kMesh) && type == Scene::UpdateFull)
 			meshes.append(node);
+		// Texture node
+		if(node.hasFn(MFn::kFileTexture) && type == Scene::UpdateFull)
+			textures.append(node);
+
 		// Shader node
 		if(node.hasFn(MFn::kLambert))
 			shaders.append(node);
-		// Texture node
-		if(node.hasFn(MFn::kFileTexture))
-			textures.append(node);
 		// Light nodes
 		if(node.hasFn(MFn::kLight))
 			lights.append(node);
@@ -352,14 +392,20 @@ MStatus Scene::update(UpdateType type)
 	ObjectHash hShaders;
 	ObjectHash hTextures;
 
-	if(!(status = updateTextures(textures, hTextures)))
-		return status;
-	if(!(status = updateShaders(shaders, hTextures, hShaders)))
-		return status;
+	if(type == Scene::UpdateFull) {
+		if(!(status = updateTextures(textures, hTextures)))
+			return status;
+	}
+	if(m_shaders.size == shaders.length() || type == Scene::UpdateFull) {
+		if(!(status = updateShaders(shaders, hTextures, hShaders)))
+			return status;
+	}
 	if(!(status = updateLights(lights)))
 		return status;
-	if(!(status = updateMeshes(meshes, hShaders)))
-		return status;
+	if(type == Scene::UpdateFull) {
+		if(!(status = updateMeshes(meshes, hShaders)))
+			return status;
+	}
 
 	return MS::kSuccess;
 }

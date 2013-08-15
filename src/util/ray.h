@@ -22,7 +22,7 @@ public:
 	{ }
 
 	__host__ __device__
-	inline bool intersect(const Primitive3& triangle, float2& p, float& t) const
+	inline bool intersect(const Primitive3& triangle, float& u, float& v, float& t) const
 	{
 		float3 e1 = triangle.v2 - triangle.v1;
 		float3 e2 = triangle.v3 - triangle.v1;
@@ -35,13 +35,13 @@ public:
 		float invdet = 1.0f / det;
 
 		float3 T = pos - triangle.v1;
-		p.x      = dot(T, P) * invdet;
-		if(p.x < 0.0f || p.x > 1.0f)
+		u        = dot(T, P) * invdet;
+		if(u < 0.0f || u > 1.0f)
 			return false;
 
 		float3 Q = cross(T, e1);
-		p.y      = dot(dir, Q) * invdet;
-		if(p.y < 0.0f || p.x + p.y > 1.0f)
+		v        = dot(dir, Q) * invdet;
+		if(v < 0.0f || u + v > 1.0f)
 			return false;
 
 		t = dot(e2, Q) * invdet;
@@ -65,8 +65,8 @@ public:
 
 	float3 pos;
 	float3 dir;
-	float2 uv;
-	float t;
+
+	float u, v, t;
 	float weight;
 	unsigned int id;
 };
