@@ -25,4 +25,9 @@ namespace gpu {
 }
 #endif
 
+namespace gpu {
+#include <curand_kernel.h>
+}
+typedef gpu::curandState RNG;
+
 #include "config.h"

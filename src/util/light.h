@@ -6,6 +6,7 @@
 #pragma once
 
 #include <util/array.h>
+#include <kernels/intersect.h>
 
 namespace Aurora {
 
@@ -26,6 +27,7 @@ public:
 	float3 color;
 	float3 position;
 	float3 direction;
+	float3 scale;
 
 	__device__ float3 getL(const float3& P) const
 	{

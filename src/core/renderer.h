@@ -27,6 +27,7 @@ public:
 
 protected:
 	static void generateRays(const MDagPath& camera, const Dim& size, const Rect& region, Ray* rays);
+	static bool setupRNG(RNG* rng, const size_t count, const unsigned int seed);
 };
 
 } // Aurora

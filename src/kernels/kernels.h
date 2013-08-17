@@ -22,6 +22,7 @@
 void cudaGenerateRays(const Aurora::Rect& region, const Aurora::Camera& camera, Aurora::Ray* rays);
 void cudaTransform(const Aurora::Geometry& geometry, Aurora::Geometry& dest, const Aurora::Transform* transforms, const unsigned int objectCount);
 void cudaGenerateTB(const Aurora::Geometry& geometry);
+void cudaSetupRNG(RNG* state, const size_t count, const unsigned int seed);
 
 // NMH construction
 bool cudaRebuildNMH(Aurora::Geometry& geometry);
@@ -29,3 +30,5 @@ bool cudaRebuildNMH(Aurora::Geometry& geometry);
 // Rendering
 void cudaRaycast(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, const Aurora::LightsArray& lights,
 	const unsigned int numRays, Aurora::Ray* rays, void* pixels);
+void cudaRaytraceMonteCarlo(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, const Aurora::LightsArray& lights,
+	const unsigned int numRays, Aurora::Ray* rays, RNG* rng, void* pixels);

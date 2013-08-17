@@ -20,6 +20,7 @@
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\maya\renderCommand.cpp" />
     <ClCompile Include="..\..\src\render\debugPattern.cpp" />
+    <ClCompile Include="..\..\src\render\monteCarloRaytracer.cpp" />
     <ClCompile Include="..\..\src\render\raycaster.cpp" />
     <ClCompile Include="..\..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -39,6 +40,7 @@
     <ClInclude Include="..\..\src\kernels\kernels.h" />
     <ClInclude Include="..\..\src\maya\renderCommand.h" />
     <ClInclude Include="..\..\src\render\debugPattern.h" />
+    <ClInclude Include="..\..\src\render\monteCarloRaytracer.h" />
     <ClInclude Include="..\..\src\render\raycaster.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
     <ClInclude Include="..\..\src\util\array.h" />
@@ -53,10 +55,14 @@
     <ClInclude Include="..\..\src\util\transform.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\kernels\intersect.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
     <None Include="..\..\src\maya\aurora.mel" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\kernels\common.cu" />
+    <CudaCompile Include="..\..\src\kernels\monteCarloRaytracer.cu" />
     <CudaCompile Include="..\..\src\kernels\raycaster.cu" />
     <CudaCompile Include="..\..\src\kernels\rebuilder.cu" />
   </ItemGroup>
@@ -117,10 +123,11 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>OpenMayaRender.lib;OpenMayaUI.lib;OpenMaya.lib;Foundation.lib;OpenMayaAnim.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenMayaRender.lib;OpenMayaUI.lib;OpenMaya.lib;Foundation.lib;OpenMayaAnim.lib;cudart.lib;curand.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(CudaToolkitBinDir)\cudart64*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\curand64*.dll" "$(OutDir)"
 copy "$(OutDir)\*.dll" "$(MAYA_LOCATION)\bin"
 copy "$(OutDir)\*.pdb" "$(MAYA_LOCATION)\bin\plug-ins"
 copy "$(TargetPath)" "$(MAYA_LOCATION)\bin\plug-ins"
@@ -153,10 +160,11 @@ copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Comman
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>OpenMayaRender.lib;OpenMayaUI.lib;OpenMaya.lib;Foundation.lib;OpenMayaAnim.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenMayaRender.lib;OpenMayaUI.lib;OpenMaya.lib;Foundation.lib;OpenMayaAnim.lib;cudart.lib;curand.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(CudaToolkitBinDir)\cudart64*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\curand64*.dll" "$(OutDir)"
 copy "$(OutDir)\*.dll" "$(MAYA_LOCATION)\bin"
 copy "$(OutDir)\*.pdb" "$(MAYA_LOCATION)\bin\plug-ins"
 copy "$(TargetPath)" "$(MAYA_LOCATION)\bin\plug-ins"

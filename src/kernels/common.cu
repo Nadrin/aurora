@@ -130,3 +130,16 @@ __host__ void cudaGenerateTB(const Geometry& geometry)
 	dim3 gridSize = make_grid(blockSize, dim3(geometry.count));
 	cudaGenerateTBKernel<<<gridSize, blockSize>>>(geometry);
 }
+
+__global__ static void cudaSetupRNGKernel(RNG* state, const size_t count, const unsigned int seed)
+{
+	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	curand_init(seed, threadId, 0, &state[threadId]);
+}
+
+__host__ void cudaSetupRNG(RNG* state, const size_t count, const unsigned int seed)
+{
+	dim3 blockSize(64);
+	dim3 gridSize = make_grid(blockSize, dim3(count));
+	cudaSetupRNGKernel<<<gridSize, blockSize>>>(state, count, seed);
+}

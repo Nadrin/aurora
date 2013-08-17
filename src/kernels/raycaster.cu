@@ -4,12 +4,14 @@
  */
 
 #include <stdafx.h>
+
+#include <kernels/common.h>
 #include <kernels/kernels.h>
+#include <kernels/intersect.h>
 
 using namespace Aurora;
 
-#include <kernels/common.h>
-#include <kernels/intersect.h>
+#include <kernels/intersect.cuh>
 
 __global__ static void cudaRaycastKernel(const Geometry geometry, const ShadersArray shaders, const LightsArray lights,
 	const unsigned int numRays, Ray* rays, float4* pixels)

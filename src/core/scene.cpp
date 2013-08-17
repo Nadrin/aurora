@@ -314,10 +314,11 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 		buffer[i].intensity = dagLight.intensity();
 		buffer[i].samples   = dagLight.numShadowSamples();
 
+		MTransformationMatrix transform;
 		if(node.apiType() == MFn::kPointLight || node.apiType() == MFn::kAreaLight) {
 			MDagPath dagPath;
 			dagLight.getPath(dagPath);
-			buffer[i].position = make_float3(MTransformationMatrix(dagPath.inclusiveMatrix()).getTranslation(MSpace::kWorld));
+			transform = dagPath.inclusiveMatrix();
 		}
 
 		switch(node.apiType()) {
@@ -328,7 +329,8 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 			break;
 		case MFn::kPointLight:
 			{
-				buffer[i].type = Light::PointLight;
+				buffer[i].type     = Light::PointLight;
+				buffer[i].position = make_float3(transform.getTranslation(MSpace::kWorld));
 			}
 			break;
 		case MFn::kDirectionalLight:
@@ -339,8 +341,13 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 			break;
 		case MFn::kAreaLight:
 			{
+				double scale[3];
+				transform.getScale(scale, MSpace::kWorld);
+
 				buffer[i].type      = Light::AreaLight;
 				buffer[i].direction = make_float3(dagLight.lightDirection(0, MSpace::kWorld));
+				buffer[i].position  = make_float3(transform.getTranslation(MSpace::kWorld));
+				buffer[i].scale     = make_float3(float(scale[0]), float(scale[1]), float(scale[2]));
 			}
 			break;
 		default:

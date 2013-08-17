@@ -34,6 +34,9 @@
     <ClCompile Include="..\..\src\core\memory.cpp">
       <Filter>Source Root\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\render\monteCarloRaytracer.cpp">
+      <Filter>Source Root\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Root">
@@ -131,6 +134,12 @@
     <ClInclude Include="..\..\src\util\array.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kernels\intersect.cuh">
+      <Filter>Source Root\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\render\monteCarloRaytracer.h">
+      <Filter>Source Root\render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">
@@ -145,6 +154,9 @@
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\kernels\rebuilder.cu">
+      <Filter>Source Root\kernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\kernels\monteCarloRaytracer.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
   </ItemGroup>
