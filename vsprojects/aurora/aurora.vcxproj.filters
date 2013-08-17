@@ -145,18 +145,21 @@
     <None Include="..\..\src\maya\aurora.mel">
       <Filter>Source Root\maya</Filter>
     </None>
+    <None Include="..\..\src\kernels\common.cuh">
+      <Filter>Source Root\kernels</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\kernels\raycaster.cu">
-      <Filter>Source Root\kernels</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\src\kernels\common.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\kernels\rebuilder.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\kernels\monteCarloRaytracer.cu">
+      <Filter>Source Root\kernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\kernels\utility.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
   </ItemGroup>

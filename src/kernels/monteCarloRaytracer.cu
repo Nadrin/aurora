@@ -5,12 +5,12 @@
 
 #include <stdafx.h>
 
-#include <kernels/common.h>
 #include <kernels/kernels.h>
 #include <kernels/intersect.h>
 
 using namespace Aurora;
 
+#include <kernels/common.cuh>
 #include <kernels/intersect.cuh>
 
 __global__ static void cudaRaytraceMonteCarloKernel(const Geometry geometry, const ShadersArray shaders, const LightsArray lights,

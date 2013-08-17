@@ -13,7 +13,7 @@
 
 using namespace Aurora;
 
-#include <kernels/common.h>
+#include <kernels/common.cuh>
 
 #define REBUILDER_TPS_THRESHOLD 2048
 

@@ -8,7 +8,7 @@
 
 using namespace Aurora;
 
-#include <kernels/common.h>
+#include <kernels/common.cuh>
 
 static __device__ __constant__ float3 constUp;
 static __device__ __constant__ float3 constForward;
