@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include <util/ray.h>
+#include <util/math.h>
 
 namespace Aurora {
 
 class Camera
 {
 public:
-	__host__ __device__
+	__host__
 	Camera(const float3& position, const float3& direction, const float2& fov, const float aspect)
 	{
 		const float3 _up = make_float3(0.0f, 1.0f, 0.0f);

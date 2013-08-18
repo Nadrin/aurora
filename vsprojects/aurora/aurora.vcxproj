@@ -35,8 +35,6 @@
     <ClInclude Include="..\..\src\core\scene.h" />
     <ClInclude Include="..\..\src\data\geometry.h" />
     <ClInclude Include="..\..\src\data\texture.h" />
-    <ClInclude Include="..\..\src\kernels\common.h" />
-    <ClInclude Include="..\..\src\kernels\intersect.h" />
     <ClInclude Include="..\..\src\kernels\kernels.h" />
     <ClInclude Include="..\..\src\maya\renderCommand.h" />
     <ClInclude Include="..\..\src\render\debugPattern.h" />
@@ -51,14 +49,17 @@
     <ClInclude Include="..\..\src\util\primitive.h" />
     <ClInclude Include="..\..\src\util\ray.h" />
     <ClInclude Include="..\..\src\util\shader.h" />
-    <ClInclude Include="..\..\src\util\stack.h" />
     <ClInclude Include="..\..\src\util\transform.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\kernels\intersect.cuh">
-      <FileType>Document</FileType>
-    </ClInclude>
-    <None Include="..\..\src\kernels\common.cuh" />
+    <None Include="..\..\src\kernels\lib\common.cuh" />
+    <None Include="..\..\src\kernels\lib\intersect.cuh" />
+    <None Include="..\..\src\kernels\lib\light.cuh" />
+    <None Include="..\..\src\kernels\lib\primitive.cuh" />
+    <None Include="..\..\src\kernels\lib\ray.cuh" />
+    <None Include="..\..\src\kernels\lib\sampling.cuh" />
+    <None Include="..\..\src\kernels\lib\stack.cuh" />
+    <None Include="..\..\src\kernels\lib\transform.cuh" />
     <None Include="..\..\src\maya\aurora.mel" />
   </ItemGroup>
   <ItemGroup>

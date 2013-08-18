@@ -6,7 +6,6 @@
 #pragma once
 
 #include <util/array.h>
-#include <kernels/intersect.h>
 
 namespace Aurora {
 
@@ -29,16 +28,7 @@ public:
 	float3 direction;
 	float3 scale;
 
-	__device__ float3 getL(const float3& P) const
-	{
-		switch(type) {
-		case DirectionalLight:
-			return normalize(-direction);
-		case PointLight:
-		case AreaLight:
-			return normalize(position - P);
-		}
-	}
+	__device__ float3 getL(const float3& P) const;
 };
 
 typedef Array<Light, DeviceMemory>  LightsArray;

@@ -60,6 +60,9 @@
     <Filter Include="Source Root\data">
       <UniqueIdentifier>{59be03b5-da40-4396-a014-071ccb82a016}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Root\kernels\lib">
+      <UniqueIdentifier>{186c2391-6172-453b-a805-3e52b094c09b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\stdafx.h">
@@ -101,15 +104,6 @@
     <ClInclude Include="..\..\src\util\primitive.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kernels\common.h">
-      <Filter>Source Root\kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\util\stack.h">
-      <Filter>Source Root\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\kernels\intersect.h">
-      <Filter>Source Root\kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\renderer.h">
       <Filter>Source Root\core</Filter>
     </ClInclude>
@@ -134,9 +128,6 @@
     <ClInclude Include="..\..\src\util\array.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kernels\intersect.cuh">
-      <Filter>Source Root\kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\render\monteCarloRaytracer.h">
       <Filter>Source Root\render</Filter>
     </ClInclude>
@@ -145,8 +136,29 @@
     <None Include="..\..\src\maya\aurora.mel">
       <Filter>Source Root\maya</Filter>
     </None>
-    <None Include="..\..\src\kernels\common.cuh">
-      <Filter>Source Root\kernels</Filter>
+    <None Include="..\..\src\kernels\lib\common.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </None>
+    <None Include="..\..\src\kernels\lib\intersect.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </None>
+    <None Include="..\..\src\kernels\lib\sampling.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </None>
+    <None Include="..\..\src\kernels\lib\ray.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </None>
+    <None Include="..\..\src\kernels\lib\primitive.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </None>
+    <None Include="..\..\src\kernels\lib\transform.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </None>
+    <None Include="..\..\src\kernels\lib\stack.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </None>
+    <None Include="..\..\src\kernels\lib\light.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

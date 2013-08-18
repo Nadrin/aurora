@@ -4,14 +4,13 @@
  */
 
 #include <stdafx.h>
-
 #include <kernels/kernels.h>
-#include <kernels/intersect.h>
 
 using namespace Aurora;
 
-#include <kernels/common.cuh>
-#include <kernels/intersect.cuh>
+#include <kernels/lib/common.cuh>
+#include <kernels/lib/intersect.cuh>
+#include <kernels/lib/light.cuh>
 
 __global__ static void cudaRaycastKernel(const Geometry geometry, const ShadersArray shaders, const LightsArray lights,
 	const unsigned int numRays, Ray* rays, float4* pixels)
@@ -27,19 +26,18 @@ __global__ static void cudaRaycastKernel(const Geometry geometry, const ShadersA
 	ray.t   = Infinity;
 
 	if(intersect(geometry, ray, triangleIndex)) {
-		Primitive3 normals;
-		normals.readValues(geometry.normals + triangleIndex * Geometry::TriangleParams);
+		float3 N, T, S;
+		getBasisVectors(geometry, triangleIndex, ray.u, ray.v, N, S, T);
 
-		const float3 P = ray.pos + ray.dir * ray.t;
-		const float3 N = normalize(bclerp(normals.v1, normals.v2, normals.v3, ray.u, ray.v));
+		const float3 P = ray.point();
 
 		const unsigned int shaderID = getSafeID(geometry.shaders[triangleIndex]);
 		const Shader shader = shaders[shaderID];
 		
 		color = shader.ambientColor;
 		for(unsigned int i=0; i<lights.size; i++) {
-			const float3 L    = lights[i].getL(P);
-			const float dotNL = dot(N, L);
+			const float3 L    = worldToLocal(lights[i].getL(P), N, S, T);
+			const float dotNL = cosTheta(L);
 			if(dotNL > 0.0f)
 				color = color + dotNL * shader.diffuse * lights[i].intensity * shader.color * lights[i].color;
 		}

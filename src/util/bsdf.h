@@ -16,6 +16,8 @@ public:
 		BSDF_Blinn,
 	};
 	BSDFType type;
+
+
 };
 
 } // Aurora

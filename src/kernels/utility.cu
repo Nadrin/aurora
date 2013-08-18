@@ -8,7 +8,9 @@
 
 using namespace Aurora;
 
-#include <kernels/common.cuh>
+#include <kernels/lib/common.cuh>
+#include <kernels/lib/primitive.cuh>
+#include <kernels/lib/transform.cuh>
 
 static __device__ __constant__ float3 constUp;
 static __device__ __constant__ float3 constForward;

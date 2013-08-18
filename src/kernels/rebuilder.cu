@@ -13,7 +13,8 @@
 
 using namespace Aurora;
 
-#include <kernels/common.cuh>
+#include <kernels/lib/common.cuh>
+#include <kernels/lib/primitive.cuh>
 
 #define REBUILDER_TPS_THRESHOLD 2048
 

@@ -5,7 +5,9 @@
 
 #pragma once
 
-#include <util/stack.h>
+#include <kernels/lib/stack.cuh>
+#include <kernels/lib/ray.cuh>
+#include <kernels/lib/primitive.cuh>
 
 // NMH traversal state
 struct TraversalState

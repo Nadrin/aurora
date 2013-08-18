@@ -5,20 +5,18 @@
 
 #pragma once
 
-namespace Aurora {
-
 template <class T, unsigned int depth>
 class Stack
 {
 public:
-	__host__ __device__ Stack() : size(0) { }
+	__device__ Stack() : size(0) { }
 
-	__host__ __device__ inline void push(const T& item)
+	__device__ inline void push(const T& item)
 	{
 		data[size++] = item;
 	}
 
-	__host__ __device__ inline T& pop()
+	__device__ inline T& pop()
 	{
 		return data[--size];
 	}
@@ -26,5 +24,3 @@ public:
 	T data[depth];
 	unsigned int size;
 };
-
-} // Aurora
