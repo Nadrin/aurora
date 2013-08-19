@@ -5,6 +5,16 @@
 
 #pragma once
 
+// Common functions
+inline __device__ float3 make_float3(const float v)
+{ return make_float3(v, v, v);    }
+
+inline __device__ float4 make_float4(const float v)
+{ return make_float4(v, v, v, v); }
+
+inline __device__ float4 make_float4(const float3& xyz, const float w=0.0f)
+{ return make_float4(xyz.x, xyz.y, xyz.z, w); }
+
 // Kernel execution helpers
 inline __host__ dim3 make_grid(const dim3& blockSize, const dim3& domainSize)
 {

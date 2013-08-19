@@ -47,5 +47,5 @@ inline __device__ bool Ray::intersect(const float2& slab, const int axis, float2
 
 inline __device__ float3 Ray::point() const
 {
-	return pos + dir * t;
+	return pos + (dir * t);
 }

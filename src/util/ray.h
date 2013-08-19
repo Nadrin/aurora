@@ -18,7 +18,8 @@ public:
 	{ }
 
 	__host__ __device__ 
-	Ray(const float3& p, const float3& d, const float w=1.0f) : t(Infinity), id(0), weight(w)
+	Ray(const float3& p, const float3& d, const float _t=Infinity, const float w=0.0f) : 
+		t(_t), id(0), weight(w)
 	{ }
 
 	__device__

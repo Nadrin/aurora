@@ -131,34 +131,40 @@
     <ClInclude Include="..\..\src\render\monteCarloRaytracer.h">
       <Filter>Source Root\render</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\common.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\bsdf.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\light.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\intersect.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\primitive.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\ray.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\sampling.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\shader.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\stack.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\transform.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">
       <Filter>Source Root\maya</Filter>
-    </None>
-    <None Include="..\..\src\kernels\lib\common.cuh">
-      <Filter>Source Root\kernels\lib</Filter>
-    </None>
-    <None Include="..\..\src\kernels\lib\intersect.cuh">
-      <Filter>Source Root\kernels\lib</Filter>
-    </None>
-    <None Include="..\..\src\kernels\lib\sampling.cuh">
-      <Filter>Source Root\kernels\lib</Filter>
-    </None>
-    <None Include="..\..\src\kernels\lib\ray.cuh">
-      <Filter>Source Root\kernels\lib</Filter>
-    </None>
-    <None Include="..\..\src\kernels\lib\primitive.cuh">
-      <Filter>Source Root\kernels\lib</Filter>
-    </None>
-    <None Include="..\..\src\kernels\lib\transform.cuh">
-      <Filter>Source Root\kernels\lib</Filter>
-    </None>
-    <None Include="..\..\src\kernels\lib\stack.cuh">
-      <Filter>Source Root\kernels\lib</Filter>
-    </None>
-    <None Include="..\..\src\kernels\lib\light.cuh">
-      <Filter>Source Root\kernels\lib</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

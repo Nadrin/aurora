@@ -52,14 +52,36 @@
     <ClInclude Include="..\..\src\util\transform.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\kernels\lib\common.cuh" />
-    <None Include="..\..\src\kernels\lib\intersect.cuh" />
-    <None Include="..\..\src\kernels\lib\light.cuh" />
-    <None Include="..\..\src\kernels\lib\primitive.cuh" />
-    <None Include="..\..\src\kernels\lib\ray.cuh" />
-    <None Include="..\..\src\kernels\lib\sampling.cuh" />
-    <None Include="..\..\src\kernels\lib\stack.cuh" />
-    <None Include="..\..\src\kernels\lib\transform.cuh" />
+    <ClInclude Include="..\..\src\kernels\lib\bsdf.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\common.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\intersect.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\light.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\primitive.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\ray.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\sampling.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\shader.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\stack.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\transform.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
     <None Include="..\..\src\maya\aurora.mel" />
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +164,7 @@ copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Comman
       <Include>$(SolutionDir)\src;%(Include)</Include>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <Defines>_BOOL;%(Defines)</Defines>
+      <Warning>W3</Warning>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -180,6 +203,7 @@ copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Comman
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <Defines>_BOOL;%(Defines)</Defines>
       <Optimization>O2</Optimization>
+      <Warning>W3</Warning>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

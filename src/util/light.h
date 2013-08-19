@@ -6,6 +6,7 @@
 #pragma once
 
 #include <util/array.h>
+#include <util/ray.h>
 
 namespace Aurora {
 
@@ -28,7 +29,10 @@ public:
 	float3 direction;
 	float3 scale;
 
-	__device__ float3 getL(const float3& P) const;
+	__device__ float3 sampleL(RNG* rng, const float3& P, float3& wi, float& d, float& pdf) const;
+	__device__ float  pdf(const float3& P, const float3& wi) const;
+	__device__ bool   isDeltaLight() const;
+
 };
 
 typedef Array<Light, DeviceMemory>  LightsArray;

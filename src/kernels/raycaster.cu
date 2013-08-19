@@ -36,7 +36,8 @@ __global__ static void cudaRaycastKernel(const Geometry geometry, const ShadersA
 		
 		color = shader.ambientColor;
 		for(unsigned int i=0; i<lights.size; i++) {
-			const float3 L    = worldToLocal(lights[i].getL(P), N, S, T);
+			//const float3 L    = worldToLocal(lights[i].getL(P), N, S, T);
+			const float3 L = make_float3(0.0f, 0.0f, -1.0f);
 			const float dotNL = cosTheta(L);
 			if(dotNL > 0.0f)
 				color = color + dotNL * shader.diffuse * lights[i].intensity * shader.color * lights[i].color;

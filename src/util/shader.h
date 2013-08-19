@@ -5,26 +5,29 @@
 
 #pragma once
 
+#include <data/geometry.h>
+
 #include <util/array.h>
 #include <util/bsdf.h>
-
 
 namespace Aurora {
 
 class Shader
 {
 public:
-	enum TextureChannel {
-		ChannelColor = 0,
-		ChannelCount,
+	enum ShaderType {
+		LambertShader,
+		PhongShader,
+		BlinnShader,
 	};
 
-	BSDF bsdf;
-	unsigned int texture[ChannelCount];
+	ShaderType type;
+	float3     color;
+	float3     ambientColor;
+	float      diffuse;
 
-	float3 color;
-	float3 ambientColor;
-	float  diffuse;
+	__device__ BSDF getBSDF(const Geometry& geometry, const unsigned int index,
+		const float u, const float v) const;
 };
 
 typedef Array<Shader, DeviceMemory> ShadersArray;

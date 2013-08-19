@@ -48,13 +48,6 @@ inline float3 make_float3(const float x, const float y, const float z)
 inline float4 make_float4(const float x, const float y, const float z, const float w)
 { return gpu::make_float4(x, y, z, w); }
 
-inline float3 make_float3(const float2& v, const float z=0.0f)
-{ return gpu::make_float3(v.x, v.y, z); }
-inline float4 make_float4(const float2& v, const float z=0.0f, const float w=0.0f)
-{ return gpu::make_float4(v.x, v.y, z, w); }
-inline float4 make_float4(const float3& v, const float w=0.0f)
-{ return gpu::make_float4(v.x, v.y, v.z, w); }
-
 inline float3 make_float3(const MColor& color)
 { return gpu::make_float3(color.r, color.g, color.b); }
 inline float4 make_float4(const MColor& color)
@@ -65,6 +58,14 @@ inline float3 make_float3(const MVector& vector)
 inline float3 make_float3(const MFloatVector& vector)
 { return gpu::make_float3(vector.x, vector.y, vector.z); }
 #endif
+
+// Check for vector zero
+inline __host__ __device__ bool zero(const float2& v)
+{ return v.x < Epsilon && v.y < Epsilon; }
+inline __host__ __device__ bool zero(const float3& v)
+{ return v.x < Epsilon && v.y < Epsilon && v.z < Epsilon; }
+inline __host__ __device__ bool zero(const float4& v)
+{ return v.x < Epsilon && v.y < Epsilon && v.z < Epsilon && v.z < Epsilon; }
 
 // Unary operators
 inline __host__ __device__ float2 operator-(const float2& v)
@@ -173,6 +174,16 @@ inline __host__ __device__ float dot(const float4& a, const float4& b)
 // Length
 template <typename T> inline __host__ __device__ float length(const T& v)
 { return sqrtf(dot(v, v)); }
+
+template <typename T> inline __host__ __device__ float lengthSq(const T& v)
+{ return dot(v, v); }
+
+// Distance
+template <typename T> inline __host__ __device__ float distance(const T& a, const T& b)
+{ return length(a - b); }
+
+template <typename T> inline __host__ __device__ float distanceSq(const T& a, const T& b)
+{ return lengthSq(a - b); }
 
 // Normalize
 template <typename T> inline __host__ __device__ T normalize(const T& v)

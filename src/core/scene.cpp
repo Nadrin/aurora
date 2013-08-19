@@ -252,28 +252,28 @@ MStatus Scene::updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, O
 		buffer[i].ambientColor = make_float3(dagLambertShader.ambientColor());
 		buffer[i].diffuse      = dagLambertShader.diffuseCoeff();
 
-		buffer[i].texture[Shader::ChannelColor] = getConnectedIndex(MFn::kFileTexture, MObjectHandle(node), "color", hTextures);
+		//buffer[i].texture[Shader::ChannelColor] = getConnectedIndex(MFn::kFileTexture, MObjectHandle(node), "color", hTextures);
 		
 		switch(node.apiType()) {
 		case MFn::kLambert:
 			{
-				buffer[i].bsdf.type = BSDF::BSDF_Lambert;
+				buffer[i].type = Shader::LambertShader;
 			}
 			break;
 		case MFn::kPhong:
 			{
 				MFnPhongShader dagPhongShader(node);
-				buffer[i].bsdf.type = BSDF::BSDF_Phong;
+				buffer[i].type = Shader::PhongShader;
 			}
 			break;
 		case MFn::kBlinn:
 			{
 				MFnBlinnShader dagBlinnShader(node);
-				buffer[i].bsdf.type = BSDF::BSDF_Blinn;
+				buffer[i].type = Shader::BlinnShader;
 			}
 			break;
 		default:
-			buffer[i].bsdf.type = BSDF::BSDF_Lambert;
+			buffer[i].type = Shader::LambertShader;
 			break;
 		}
 
@@ -353,8 +353,7 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 		default:
 			{
 				buffer[i].type      = Light::AmbientLight;
-				buffer[i].intensity = 0.0f;
-				buffer[i].samples   = 1;
+				buffer[i].samples   = 0;
 			}
 			break;
 		}
