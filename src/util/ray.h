@@ -14,13 +14,16 @@ class Ray
 {
 public:
 	__host__ __device__
-	Ray() : t(Infinity), id(0), weight(1.0f)
+	Ray() : t(Infinity), id(0), weight(1.0f), u(0.0f), v(0.0f)
 	{ }
 
 	__host__ __device__ 
 	Ray(const float3& p, const float3& d, const float _t=Infinity, const float w=0.0f) : 
-		t(_t), id(0), weight(w)
+		pos(p), dir(d), t(_t), id(0), weight(w), u(0.0f), v(0.0f)
 	{ }
+
+	__device__
+	Ray& offset(const float off=RayEpsilon);
 
 	__device__
 	bool intersect(const Primitive3& triangle, float& u, float& v, float& t) const;

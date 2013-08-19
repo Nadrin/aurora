@@ -13,12 +13,13 @@
 
 namespace Aurora {
 
-static const float __device__ Infinity = 1000000.0f;
-static const float __device__ Epsilon  = 0.0000001f;
-static const float __device__ Pi       = 3.1415926536f;
-static const float __device__ TwoPi    = 6.2831853072f;
-static const float __device__ InvPi    = 0.3183098862f;
-static const float __device__ Radian   = 0.0174532925f;
+static const float __device__ Infinity   = 1000000.0f;
+static const float __device__ Epsilon    = 0.0000001f;
+static const float __device__ RayEpsilon = 0.0001f;
+static const float __device__ Pi         = 3.1415926536f;
+static const float __device__ TwoPi      = 6.2831853072f;
+static const float __device__ InvPi      = 0.3183098862f;
+static const float __device__ Radian     = 0.0174532925f;
 
 #ifndef __CUDACC__
 typedef gpu::int2 int2;

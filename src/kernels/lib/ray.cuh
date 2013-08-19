@@ -5,6 +5,15 @@
 
 #pragma once
 
+inline __device__ Ray& Ray::offset(const float off)
+{
+	pos.x += off * dir.x;
+	pos.y += off * dir.y;
+	pos.z += off * dir.z;
+	t     += off;
+	return *this;
+}
+
 inline __device__ bool Ray::intersect(const Primitive3& triangle, float& u, float& v, float& t) const
 {
 	float3 e1 = triangle.v2 - triangle.v1;

@@ -311,7 +311,7 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 		const MFnLight dagLight(node);
 
 		buffer[i].color     = make_float3(dagLight.color());
-		buffer[i].intensity = dagLight.intensity();
+		buffer[i].intensity = dagLight.intensity() * Pi;
 		buffer[i].samples   = dagLight.numShadowSamples();
 
 		MTransformationMatrix transform;

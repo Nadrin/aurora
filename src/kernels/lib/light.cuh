@@ -17,7 +17,7 @@ inline __device__ float3 Light::sampleL(RNG* rng, const float3& P, float3& wi, f
 		d   = distance(position, P);
 		wi  = (position - P) / d;
 		pdf = 1.0f;
-		return make_float3(intensity);
+		return color * intensity;
 		//return make_float3(intensity / (d*d));
 	}
 }

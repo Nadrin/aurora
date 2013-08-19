@@ -46,23 +46,28 @@ __global__ static void cudaRaytraceMonteCarloKernel(const Geometry geometry, con
 			float3 Ls = make_float3(0.0f);
 			
 			float3 Wi, Le, f;
-			float  Lpdf, BSDFpdf, Ldistance;
+			float  Lpdf, BSDFpdf, Ldistance, weight;
 
 			// Sample light source
 			Le = light.sampleL(&rng, P, Wi, Ldistance, Lpdf);
 			if(Lpdf > 0.0f && !zero(Le)) {
 				f = bsdf.f(Wo, Wi);
 
-				unsigned int tmp;
-				Ray tmpray(P + 0.00001f * Wi, Wi, Infinity);
-				if(!zero(f) && !intersect(geometry, tmpray, tmp)) {
+				if(!zero(f) && !intersectAny(geometry, Ray(P, Wi, Ldistance).offset())) {
 					if(light.isDeltaLight()) { 
-						Ls = Ls + f * Le * (fabsf(dot(bsdf.N, Wi)) / Lpdf);
+						Ls = Ls + f * Le * fmaxf(0.0f, dot(bsdf.N, Wi)) / Lpdf;
 					}
 					else {
-
+						BSDFpdf = bsdf.pdf(Wo, Wi);
+						weight  = powerHeuristic(1, BSDFpdf, 1, Lpdf);
+						Ls = Ls + f * Le * fmaxf(0.0f, dot(bsdf.N, Wi)) * weight / Lpdf;
 					}
 				}
+			}
+
+			// Sample BSDF
+			if(!light.isDeltaLight()) {
+
 			}
 
 			Li = Li + Ls;
