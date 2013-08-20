@@ -44,6 +44,7 @@
     <ClInclude Include="..\..\src\util\array.h" />
     <ClInclude Include="..\..\src\util\bsdf.h" />
     <ClInclude Include="..\..\src\util\camera.h" />
+    <ClInclude Include="..\..\src\util\hitpoint.h" />
     <ClInclude Include="..\..\src\util\light.h" />
     <ClInclude Include="..\..\src\util\math.h" />
     <ClInclude Include="..\..\src\util\primitive.h" />

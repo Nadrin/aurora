@@ -14,12 +14,12 @@ class Ray
 {
 public:
 	__host__ __device__
-	Ray() : t(Infinity), id(0), weight(1.0f), u(0.0f), v(0.0f)
+	Ray() : t(Infinity)
 	{ }
 
 	__host__ __device__ 
-	Ray(const float3& p, const float3& d, const float _t=Infinity, const float w=0.0f) : 
-		pos(p), dir(d), t(_t), id(0), weight(w), u(0.0f), v(0.0f)
+	Ray(const float3& p, const float3& d, const float t=Infinity) : 
+		pos(p), dir(d), t(t)
 	{ }
 
 	__device__
@@ -36,10 +36,7 @@ public:
 
 	float3 pos;
 	float3 dir;
-
-	float u, v, t;
-	float weight;
-	unsigned int id;
+	float t;
 };
 
 } // Aurora

@@ -11,6 +11,7 @@
 
 #include <util/math.h>
 #include <util/ray.h>
+#include <util/hitpoint.h>
 #include <core/scene.h>
 
 namespace Aurora {
@@ -18,7 +19,8 @@ namespace Aurora {
 class Renderer
 {
 public:
-	virtual MStatus createFrame(const unsigned int width, const unsigned int height, Scene* scene, MDagPath& camera) = 0;
+	virtual MStatus createFrame(const unsigned int width, const unsigned int height,
+		const unsigned short samples, Scene* scene, MDagPath& camera) = 0;
 	virtual MStatus destroyFrame() = 0;
 	virtual MStatus setRegion(const Rect& region) = 0;
 
@@ -26,7 +28,9 @@ public:
 	virtual RV_PIXEL* framebuffer() = 0;
 
 protected:
-	static void generateRays(const MDagPath& camera, const Dim& size, const Rect& region, Ray* rays);
+	static void generateRays(const MDagPath& camera, const Dim& size, const Rect& region,
+		Ray* rays, HitPoint* hit);
+	static void drawPixels(const Dim& size, const Rect& region, const HitPoint* hit, void* pixels);
 	static bool setupRNG(RNG* rng, const size_t count, const unsigned int seed);
 };
 

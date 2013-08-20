@@ -113,7 +113,7 @@ MStatus Engine::iprStart(unsigned int width, unsigned int height, const MString&
 	if(!m_scene->update(Scene::UpdateFull))
 		return MS::kFailure;
 
-	if(!m_renderer->createFrame(width, height, m_scene, m_camera)) {
+	if(!m_renderer->createFrame(width, height, 1, m_scene, m_camera)) {
 		m_scene->free();
 		return MS::kFailure;
 	}
@@ -177,7 +177,7 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	}
 	gpu::cudaEventRecord(m_eventUpdate[1]);
 
-	if(!m_renderer->createFrame(width, height, m_scene, m_camera))
+	if(!m_renderer->createFrame(width, height, 9, m_scene, m_camera))
 		return MS::kFailure;
 
 	m_window = Rect(0, width-1, 0, height-1);

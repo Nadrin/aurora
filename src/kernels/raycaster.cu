@@ -13,48 +13,39 @@ using namespace Aurora;
 #include <kernels/lib/light.cuh>
 
 __global__ static void cudaRaycastKernel(const Geometry geometry, const ShadersArray shaders, const LightsArray lights,
-	const unsigned int numRays, Ray* rays, float4* pixels)
+	const unsigned int numRays, Ray* rays, HitPoint* hitpoints)
 {
 	unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= numRays)
 		return;
 
-	float3 color = make_float3(0.0f, 0.0f, 0.0f);
+	Ray&		ray = rays[threadId];
+	HitPoint&	hit = hitpoints[threadId];
 
-	unsigned int triangleIndex;
-	Ray ray = rays[threadId];
-	ray.t   = Infinity;
-
-	if(intersect(geometry, ray, triangleIndex)) {
+	if(intersect(geometry, ray, hit)) {
 		float3 N, T, S;
-		getBasisVectors(geometry, triangleIndex, ray.u, ray.v, N, S, T);
+		getBasisVectors(geometry, hit.triangleID, hit.u, hit.v, N, S, T);
 
 		const float3 P = ray.point();
 
-		const unsigned int shaderID = getSafeID(geometry.shaders[triangleIndex]);
+		const unsigned int shaderID = getSafeID(geometry.shaders[hit.triangleID]);
 		const Shader shader = shaders[shaderID];
 		
-		color = shader.ambientColor;
+		hit.color = shader.ambientColor;
 		for(unsigned int i=0; i<lights.size; i++) {
-			//const float3 L    = worldToLocal(lights[i].getL(P), N, S, T);
-			const float3 L = make_float3(0.0f, 0.0f, -1.0f);
+			const float3 gL   = normalize(lights[i].position - P);
+			const float3 L    = worldToLocal(gL, N, S, T);
 			const float dotNL = cosTheta(L);
 			if(dotNL > 0.0f)
-				color = color + dotNL * shader.diffuse * lights[i].intensity * shader.color * lights[i].color;
+				hit.color = hit.color + dotNL * shader.diffuse * lights[i].intensity * shader.color * lights[i].color;
 		}
 	}
-
-	pixels[ray.id] = make_float4(
-		clamp(color.x, 0.0f, 1.0f),
-		clamp(color.y, 0.0f, 1.0f),
-		clamp(color.z, 0.0f, 1.0f),
-		1.0f);
 }
 
 void cudaRaycast(const Geometry& geometry, const ShadersArray& shaders, const LightsArray& lights,
-	const unsigned int numRays, Ray* rays, void* pixels)
+	const unsigned int numRays, Ray* rays, HitPoint* hitpoints)
 {
 	dim3 blockSize(256);
 	dim3 gridSize = make_grid(blockSize, dim3(numRays));
-	cudaRaycastKernel<<<gridSize, blockSize>>>(geometry, shaders, lights, numRays, rays, (float4*)pixels);
+	cudaRaycastKernel<<<gridSize, blockSize>>>(geometry, shaders, lights, numRays, rays, hitpoints);
 }

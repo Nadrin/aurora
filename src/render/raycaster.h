@@ -17,7 +17,8 @@ public:
 	Raycaster();
 	~Raycaster();
 
-	MStatus createFrame(const unsigned int width, const unsigned int height, Scene* scene, MDagPath& camera);
+	MStatus createFrame(const unsigned int width, const unsigned int height, const unsigned short samples,
+		Scene* scene, MDagPath& camera);
 	MStatus destroyFrame();
 	MStatus setRegion(const Rect& region);
 
@@ -28,10 +29,11 @@ protected:
 	float4*	   m_pixels;
 	Scene*	   m_scene;
 	Ray*       m_rays;
+	HitPoint*  m_hit;
 
 	RV_PIXEL*  m_framebuffer;
 	Rect       m_region;
-	Dim		   m_size;
+	Dim        m_size;
 };
 
 } // Aurora

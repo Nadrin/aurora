@@ -11,7 +11,8 @@
 
 using namespace Aurora;
 
-void Renderer::generateRays(const MDagPath& camera, const Dim& size, const Rect& region, Ray* rays)
+void Renderer::generateRays(const MDagPath& camera, const Dim& size, const Rect& region,
+	Ray* rays, HitPoint* hit)
 {
 	MFnCamera dagCamera(camera);
 	MPoint camEyePoint   = dagCamera.eyePoint(MSpace::kWorld);
@@ -26,7 +27,12 @@ void Renderer::generateRays(const MDagPath& camera, const Dim& size, const Rect&
 		make_float3((float)camDirection.x, (float)camDirection.y, (float)camDirection.z),
 		make_float2((float)camFovX, (float)camFovY), (float)camAspect);
 
-	cudaGenerateRays(region, rayCamera, rays);
+	cudaGenerateRays(region, size.depth, rayCamera, rays, hit);
+}
+
+void Renderer::drawPixels(const Dim& size, const Rect& region, const HitPoint* hit, void* pixels)
+{
+	cudaDrawPixels(size, region, size.depth, hit, pixels);
 }
 
 bool Renderer::setupRNG(RNG* rng, const size_t count, const unsigned int seed)

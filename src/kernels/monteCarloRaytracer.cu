@@ -15,29 +15,27 @@ using namespace Aurora;
 #include <kernels/lib/light.cuh>
 
 __global__ static void cudaRaytraceMonteCarloKernel(const Geometry geometry, const ShadersArray shaders, const LightsArray lights,
-	const unsigned int numRays, Ray* rays, RNG* grng, float4* pixels)
+	RNG* grng, const unsigned int numRays, Ray* rays, HitPoint* hits)
 {
 	const unsigned int rayID = blockDim.x * blockIdx.x + threadIdx.x;
 	if(rayID >= numRays)
 		return;
 
-	unsigned int triangleIndex;
-	RNG rng = grng[threadIdx.x];
-	Ray ray = rays[rayID];
+	RNG rng		  = grng[threadIdx.x];
+	Ray ray	      = rays[rayID];
+	HitPoint& hit = hits[rayID];
 
-	if(!intersect(geometry, ray, triangleIndex)) {
-		pixels[ray.id] = make_float4(0.0f);
+	if(!intersect(geometry, ray, hit))
 		return;
-	}
 
 	const float3 P = ray.point();
 
-	const unsigned int shaderID = getSafeID(geometry.shaders[triangleIndex]);
+	const unsigned int shaderID = getSafeID(geometry.shaders[hit.triangleID]);
 	const Shader shader = shaders[shaderID];
-	const BSDF   bsdf   = shader.getBSDF(geometry, triangleIndex, ray.u, ray.v);
+	const BSDF   bsdf   = shader.getBSDF(geometry, hit.triangleID, hit.u, hit.v);
 	const float3 Wo     = -ray.dir;
 
-	float3 color = shader.ambientColor;
+	hit.color = shader.ambientColor;
 	for(unsigned int l=0; l<lights.size; l++) {
 		const Light& light = lights[l];
 		
@@ -73,16 +71,14 @@ __global__ static void cudaRaytraceMonteCarloKernel(const Geometry geometry, con
 			Li = Li + Ls;
 		}
 		if(lights[l].samples > 0)
-			color = color + (Li / lights[l].samples);
+			hit.color = hit.color + (Li / lights[l].samples);
 	}
-
-	pixels[ray.id] = make_float4(color, 1.0f);
 }
 
 __host__ void cudaRaytraceMonteCarlo(const Geometry& geometry, const ShadersArray& shaders, const LightsArray& lights,
-	const unsigned int numRays, Ray* rays, RNG* rng, void* pixels)
+	RNG* rng, const unsigned int numRays, Ray* rays, HitPoint* hits)
 {
 	dim3 blockSize(256);
 	dim3 gridSize = make_grid(blockSize, dim3(numRays));
-	cudaRaytraceMonteCarloKernel<<<gridSize, blockSize>>>(geometry, shaders, lights, numRays, rays, rng, (float4*)pixels);
+	cudaRaytraceMonteCarloKernel<<<gridSize, blockSize>>>(geometry, shaders, lights, rng, numRays, rays, hits);
 }

@@ -82,7 +82,7 @@ inline __device__ bool intersectAny(const Geometry& geometry, Ray& ray)
 }
 
 // Intersect closest triangle
-inline __device__ bool intersect(const Geometry& geometry, Ray& ray, unsigned int& triangleIndex)
+inline __device__ bool intersect(const Geometry& geometry, Ray& ray, HitPoint& hp)
 {
 	bool hit = false;
 	Stack<TraversalState, AURORA_INTSTACK_DEPTH> stack;
@@ -111,18 +111,18 @@ inline __device__ bool intersect(const Geometry& geometry, Ray& ray, unsigned in
 		float t;
 
 		if(ray.intersect(triangle1, u, v, t) && t > Epsilon && t < ray.t) {
-			hit    = true;
-			ray.t  = t;
-			ray.u  = u;
-			ray.v  = v;
-			triangleIndex = state.index;
+			hit   = true;
+			ray.t = t;
+			hp.u  = u;
+			hp.v  = v;
+			hp.triangleID = state.index;
 		}
 		if(ray.intersect(triangle2, u, v, t) && t > Epsilon && t < ray.t) {
-			hit    = true;
-			ray.t  = t;
-			ray.u  = u;
-			ray.v  = v;
-			triangleIndex = state.index+1;
+			hit   = true;
+			ray.t = t;
+			hp.u  = u;
+			hp.v  = v;
+			hp.triangleID = state.index+1;
 		}
 
 		state.axis = (state.axis + 1) % 3;

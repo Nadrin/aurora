@@ -161,6 +161,9 @@
     <ClInclude Include="..\..\src\kernels\lib\transform.cuh">
       <Filter>Source Root\kernels\lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\util\hitpoint.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">
