@@ -31,7 +31,7 @@ protected:
 	static void generateRays(const MDagPath& camera, const Dim& size, const Rect& region,
 		Ray* rays, HitPoint* hit);
 	static void drawPixels(const Dim& size, const Rect& region, const HitPoint* hit, void* pixels);
-	static bool setupRNG(RNG* rng, const size_t count, const unsigned int seed);
+	static bool setupRNG(RNG** rng, const size_t count, const unsigned int seed);
 };
 
 } // Aurora

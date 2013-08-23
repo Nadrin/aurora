@@ -37,7 +37,6 @@ __global__ static void cudaGenerateRaysKernel(const uint2 size, const Camera cam
 		camera.forward);
 
 	hp.color      = make_float3(0.0f, 0.0f, 0.0f);
-	hp.weight     = 1.0f;
 	hp.triangleID = -1;
 }
 
@@ -74,7 +73,6 @@ __global__ static void cudaGenerateRaysKernelMultisample(const uint2 size, const
 				camera.forward);
 
 			hp.color      = make_float3(0.0f, 0.0f, 0.0f);
-			hp.weight     = 1.0f / samples;
 			hp.triangleID = -1;
 		}
 	}
@@ -183,6 +181,8 @@ __host__ void cudaGenerateTB(const Geometry& geometry)
 __global__ static void cudaSetupRNGKernel(RNG* state, const size_t count, const unsigned int seed)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	if(threadId >= count)
+		return;
 	curand_init(seed, threadId, 0, &state[threadId]);
 }
 
@@ -201,6 +201,8 @@ __global__ static void cudaDrawPixelsKernel(const Dim size, const Rect region, c
 
 	if(x > region.right || y > region.top)
 		return;
+	
+	const float weight = 1.0f / samples;
 
 	const unsigned int pixelID = size.width * y + x;
 	const unsigned int rayID   = samples * pixelID;
@@ -209,11 +211,10 @@ __global__ static void cudaDrawPixelsKernel(const Dim size, const Rect region, c
 	for(unsigned short i=0; i<samples; i++) {
 		const HitPoint& hp = hit[rayID + i];
 		if(hp.triangleID != -1) {
-			const float w = hp.weight;
-			value.x += hp.color.x * w;
-			value.y += hp.color.y * w;
-			value.z += hp.color.z * w;
-			value.w += w;
+			value.x += hp.color.x * weight;
+			value.y += hp.color.y * weight;
+			value.z += hp.color.z * weight;
+			value.w += weight;
 		}
 	}
 	pixels[pixelID] = value;

@@ -46,7 +46,7 @@ MStatus MonteCarloRaytracer::createFrame(const unsigned int width, const unsigne
 	m_size     = Dim(width, height, samples);
 
 	Renderer::generateRays(camera, m_size, m_region, m_rays, m_hit);
-	Renderer::setupRNG(m_rng, 1024, 1);
+	Renderer::setupRNG(&m_rng, width * height * samples, 666);
 	return MS::kSuccess;
 }
 

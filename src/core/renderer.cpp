@@ -35,11 +35,11 @@ void Renderer::drawPixels(const Dim& size, const Rect& region, const HitPoint* h
 	cudaDrawPixels(size, region, size.depth, hit, pixels);
 }
 
-bool Renderer::setupRNG(RNG* rng, const size_t count, const unsigned int seed)
+bool Renderer::setupRNG(RNG** rng, const size_t count, const unsigned int seed)
 {
-	if(gpu::cudaMalloc(&rng, count * sizeof(gpu::curandState)) != gpu::cudaSuccess)
+	if(gpu::cudaMalloc(rng, count * sizeof(RNG)) != gpu::cudaSuccess)
 		return false;
 
-	cudaSetupRNG(rng, count, seed);
+	cudaSetupRNG(*rng, count, seed);
 	return true;
 }
