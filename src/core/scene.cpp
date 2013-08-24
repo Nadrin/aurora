@@ -248,9 +248,14 @@ MStatus Scene::updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, O
 		const MObject node = nodes[i];
 		const MFnLambertShader dagLambertShader(node);
 
-		buffer[i].color        = make_float3(dagLambertShader.color());
-		buffer[i].ambientColor = make_float3(dagLambertShader.ambientColor());
-		buffer[i].diffuse      = dagLambertShader.diffuseCoeff();
+		buffer[i].diffuse = dagLambertShader.diffuseCoeff();
+
+		float _unused;
+		dagLambertShader.incandescence().get(MColor::kHSV, _unused, _unused, buffer[i].emission);
+		if(buffer[i].emission > 0.0f)
+			buffer[i].color = make_float3(dagLambertShader.incandescence());
+		else
+			buffer[i].color = make_float3(dagLambertShader.color());
 
 		//buffer[i].texture[Shader::ChannelColor] = getConnectedIndex(MFn::kFileTexture, MObjectHandle(node), "color", hTextures);
 		

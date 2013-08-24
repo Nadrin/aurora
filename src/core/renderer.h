@@ -24,6 +24,8 @@ public:
 	virtual MStatus destroyFrame() = 0;
 	virtual MStatus setRegion(const Rect& region) = 0;
 
+	virtual MStatus	  update() { return MS::kSuccess; }
+	
 	virtual MStatus   render(bool ipr) = 0;
 	virtual RV_PIXEL* framebuffer() = 0;
 

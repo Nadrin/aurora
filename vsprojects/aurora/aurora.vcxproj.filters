@@ -37,6 +37,9 @@
     <ClCompile Include="..\..\src\render\monteCarloRaytracer.cpp">
       <Filter>Source Root\render</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\render\photonMapper.cpp">
+      <Filter>Source Root\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Root">
@@ -164,6 +167,9 @@
     <ClInclude Include="..\..\src\util\hitpoint.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\render\photonMapper.h">
+      <Filter>Source Root\render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">
@@ -181,6 +187,12 @@
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\kernels\utility.cu">
+      <Filter>Source Root\kernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\kernels\photonMapper.cu">
+      <Filter>Source Root\kernels</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\kernels\polyLight.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
   </ItemGroup>

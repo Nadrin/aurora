@@ -15,6 +15,9 @@ public:
 	__device__ void writePoints(float* v);
 	__device__ void writeValues(float* v);
 
+	__device__ float  area() const;
+	__device__ float2 centroid() const;
+
 	float2 v1;
 	float2 v2;
 	float2 v3;
@@ -27,6 +30,9 @@ public:
 	__device__ void readValues(const float* v);
 	__device__ void writePoints(float* v);
 	__device__ void writeValues(float* v);
+
+	__device__ float  area() const;
+	__device__ float3 centroid() const;
 
 	float3 v1;
 	float3 v2;

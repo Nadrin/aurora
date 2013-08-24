@@ -35,7 +35,7 @@ __global__ static void cudaRaytraceMonteCarloKernel(const Geometry geometry, con
 	const BSDF   bsdf   = shader.getBSDF(geometry, hit.triangleID, hit.u, hit.v);
 	const float3 Wo     = -ray.dir;
 
-	hit.color = shader.ambientColor;
+	hit.color = make_float3(0.0f);
 	for(unsigned int l=0; l<lights.size; l++) {
 		const Light& light = lights[l];
 		

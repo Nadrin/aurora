@@ -5,8 +5,7 @@
 
 #include <stdafx.h>
 #include <core/engine.h>
-#include <render/debugPattern.h>
-#include <render/monteCarloRaytracer.h>
+#include <render/photonMapper.h>
 
 #include <maya/MGlobal.h>
 #include <maya/MRenderView.h>
@@ -49,7 +48,7 @@ MStatus Engine::initialialize(const int device)
 
 	m_deviceID  = deviceNumber;
 	m_scene     = new Scene();
-	m_renderer  = new MonteCarloRaytracer();
+	m_renderer  = new PhotonMapper();
 
 	gpu::cudaEventCreate(&m_eventUpdate[0]);
 	gpu::cudaEventCreate(&m_eventUpdate[1]);
@@ -122,6 +121,11 @@ MStatus Engine::iprStart(unsigned int width, unsigned int height, const MString&
 	m_window = Rect(0, width-1, 0, height-1);
 
 	m_renderer->setRegion(m_window);
+	if(!m_renderer->update()) {
+		m_scene->free();
+		return MS::kFailure;
+	}
+
 	m_pause.unlock();
 
 	MRenderView::setCurrentCamera(m_camera);
@@ -144,8 +148,12 @@ MStatus Engine::iprPause(bool pause)
 
 MStatus Engine::iprRefresh()
 {
+	MStatus status;
 	m_lock.lock();
-	MStatus status = m_scene->update(Scene::UpdateFull);
+
+	if(status = m_scene->update(Scene::UpdateFull))
+		status = m_renderer->update();
+
 	m_lock.unlock();
 
 	return status;
@@ -187,6 +195,11 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	MRenderView::setCurrentCamera(m_camera);
 
 	gpu::cudaEventRecord(m_eventRender[0]);
+	if((status = m_renderer->update()) != MS::kSuccess) {
+		m_renderer->destroyFrame();
+		m_state = Engine::StateIdle;
+		return status;
+	}
 	if((status = m_renderer->render(false)) != MS::kSuccess) {
 		m_renderer->destroyFrame();
 		m_state = Engine::StateIdle;

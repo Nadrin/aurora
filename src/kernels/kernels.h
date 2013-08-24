@@ -37,3 +37,6 @@ void cudaRaycast(const Aurora::Geometry& geometry, const Aurora::ShadersArray& s
 	const unsigned int numRays, Aurora::Ray* rays, Aurora::HitPoint* hitpoints);
 void cudaRaytraceMonteCarlo(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, const Aurora::LightsArray& lights,
 	RNG* rng, const unsigned int numRays, Aurora::Ray* rays, Aurora::HitPoint* hitpoints);
+
+// Photon Mapping
+unsigned int cudaCreatePolyLights(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, Aurora::PolyLight** lights);

@@ -21,6 +21,7 @@
     <ClCompile Include="..\..\src\maya\renderCommand.cpp" />
     <ClCompile Include="..\..\src\render\debugPattern.cpp" />
     <ClCompile Include="..\..\src\render\monteCarloRaytracer.cpp" />
+    <ClCompile Include="..\..\src\render\photonMapper.cpp" />
     <ClCompile Include="..\..\src\render\raycaster.cpp" />
     <ClCompile Include="..\..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -39,6 +40,7 @@
     <ClInclude Include="..\..\src\maya\renderCommand.h" />
     <ClInclude Include="..\..\src\render\debugPattern.h" />
     <ClInclude Include="..\..\src\render\monteCarloRaytracer.h" />
+    <ClInclude Include="..\..\src\render\photonMapper.h" />
     <ClInclude Include="..\..\src\render\raycaster.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
     <ClInclude Include="..\..\src\util\array.h" />
@@ -87,6 +89,8 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\kernels\monteCarloRaytracer.cu" />
+    <CudaCompile Include="..\..\src\kernels\photonMapper.cu" />
+    <CudaCompile Include="..\..\src\kernels\polyLight.cu" />
     <CudaCompile Include="..\..\src\kernels\raycaster.cu" />
     <CudaCompile Include="..\..\src\kernels\rebuilder.cu" />
     <CudaCompile Include="..\..\src\kernels\utility.cu" />

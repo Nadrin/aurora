@@ -31,7 +31,7 @@ __global__ static void cudaRaycastKernel(const Geometry geometry, const ShadersA
 		const unsigned int shaderID = getSafeID(geometry.shaders[hit.triangleID]);
 		const Shader shader = shaders[shaderID];
 		
-		hit.color = shader.ambientColor;
+		hit.color = make_float3(0.0f);
 		for(unsigned int i=0; i<lights.size; i++) {
 			const float3 gL   = normalize(lights[i].position - P);
 			const float3 L    = worldToLocal(gL, N, S, T);

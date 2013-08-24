@@ -68,6 +68,14 @@ inline __device__ float sampleHemisphereCosinePdf(const float costheta)
 	return costheta * InvPi;
 }
 
+// Sampling: Uniform triangle
+inline __device__ void sampleTriangle(const float u1, const float u2, float& u, float& v)
+{
+	const float sqrtu1 = sqrtf(u1);
+	u = 1.0f - sqrtu1;
+	v = u2 * sqrtu1;
+}
+
 // Monte Carlo heuristics
 inline __device__ float balanceHeuristic(
 	const unsigned int n1, const float pdf1,

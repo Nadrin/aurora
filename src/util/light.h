@@ -35,6 +35,15 @@ public:
 
 };
 
+class PolyLight
+{
+public:
+	float area;
+	float emission;
+	float cdf;
+	unsigned int triangleID;
+};
+
 typedef Array<Light, DeviceMemory>  LightsArray;
 
 } // Aurora

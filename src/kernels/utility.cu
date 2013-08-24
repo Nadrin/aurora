@@ -183,7 +183,10 @@ __global__ static void cudaSetupRNGKernel(RNG* state, const size_t count, const 
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= count)
 		return;
-	curand_init(seed, threadId, 0, &state[threadId]);
+
+	RNG localState = state[threadId];
+	curand_init(seed, threadId, 0, &localState);
+	state[threadId] = localState;
 }
 
 __host__ void cudaSetupRNG(RNG* state, const size_t count, const unsigned int seed)
