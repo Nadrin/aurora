@@ -6,7 +6,9 @@
 #pragma once
 
 #include <core/renderer.h>
+
 #include <util/light.h>
+#include <util/photon.h>
 
 namespace Aurora {
 
@@ -34,6 +36,8 @@ protected:
 
 	HitPoint*    m_primaryHits;
 	PolyLight*   m_lights;
+	Photon*      m_photons;
+
 	unsigned int m_numLights;
 	unsigned int m_numPhotons;
 

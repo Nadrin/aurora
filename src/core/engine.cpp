@@ -6,6 +6,7 @@
 #include <stdafx.h>
 #include <core/engine.h>
 #include <render/photonMapper.h>
+#include <render/raycaster.h>
 
 #include <maya/MGlobal.h>
 #include <maya/MRenderView.h>

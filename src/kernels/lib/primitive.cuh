@@ -73,9 +73,14 @@ inline __device__ void Primitive3::writeValues(float* v)
 
 inline __device__ float Primitive3::area() const
 {
-	const float a = dot(v1, v2);
-	const float b = dot(v1, v3);
-	const float c = dot(v2, v3);
+	const float3 va = v1 - v2;
+	const float3 vb = v1 - v3;
+	const float3 vc = v2 - v3;
+
+	const float a = dot(va, va);
+	const float b = dot(vb, vb);
+	const float c = dot(vc, vc);
+
 	return sqrtf((2*a*b + 2*b*c + 2*c*a - a*a - b*b - c*c) / 16.0f);
 }
 

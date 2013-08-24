@@ -15,6 +15,8 @@ public:
 		: triangleID(-1), u(0.0f), v(0.0f) { }
 
 	float3 color;
+	float3 position;
+
 	float  u;
 	float  v;
 	int    triangleID;

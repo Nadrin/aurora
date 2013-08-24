@@ -170,6 +170,9 @@
     <ClInclude Include="..\..\src\render\photonMapper.h">
       <Filter>Source Root\render</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\util\photon.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">

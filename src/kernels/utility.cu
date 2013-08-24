@@ -184,9 +184,8 @@ __global__ static void cudaSetupRNGKernel(RNG* state, const size_t count, const 
 	if(threadId >= count)
 		return;
 
-	RNG localState = state[threadId];
-	curand_init(seed, threadId, 0, &localState);
-	state[threadId] = localState;
+	//curand_init(seed, threadId, 0, &state[threadId]);
+	curand_init(seed + threadId, 0, 0, &state[threadId]);
 }
 
 __host__ void cudaSetupRNG(RNG* state, const size_t count, const unsigned int seed)

@@ -30,37 +30,46 @@ struct PolyLightCdfBinaryOp
 		PolyLight result;
 		result.emission   = b.emission;
 		result.triangleID = b.triangleID;
-		result.cdf        = a.emission + b.emission;
+		result.cdf        = a.cdf + b.cdf;
 		return result;
 	}
 };
 
-__global__ static void cudaInitPolyLights(const Geometry geometry, const ShadersArray shaders, PolyLight* lights)
+__global__ static void cudaInitPolyLights(const Geometry geometry, const Shader* shaders, PolyLight* lights)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= geometry.count)
 		return;
 
 	const unsigned int shaderID = getSafeID(geometry.shaders[threadId]);
+	const float emission        = shaders[shaderID].emission;
+
 	lights[threadId].triangleID = threadId;
-	lights[threadId].emission   = shaders[shaderID].emission;
+	lights[threadId].emission   = emission;
 }
 
-__global__ static void cudaCalculatePolyLightsCDF(const Geometry geometry, const unsigned int numLights, PolyLight* lights)
+__global__ static void cudaCalculatePolyLightsCDF(const Geometry geometry,
+	const unsigned int numLights, PolyLight* lights)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= numLights)
 		return;
 
-	volatile __shared__ float cdfIntegral;
-	if(threadId == 0)
-		cdfIntegral = lights[numLights-1].cdf;
-	__syncthreads();
-	lights[threadId].cdf /= cdfIntegral;
-
 	Primitive3 triangle;
 	triangle.readPoints(geometry.vertices + lights[threadId].triangleID * Geometry::TriangleParams);
-	lights[threadId].area = triangle.area();
+	
+	const float area = triangle.area();
+	lights[threadId].area = area;
+	lights[threadId].cdf  = lights[threadId].emission;// * area;
+}
+
+__global__ static void cudaNormalizePolyLightsCDF(const unsigned int numLights, PolyLight* lights,
+	const float cdfIntegral)
+{
+	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	if(threadId >= numLights)
+		return;
+	lights[threadId].cdf /= cdfIntegral;
 }
 
 __host__ unsigned int cudaCreatePolyLights(const Geometry& geometry, const ShadersArray& shaders, PolyLight** lights)
@@ -75,12 +84,11 @@ __host__ unsigned int cudaCreatePolyLights(const Geometry& geometry, const Shade
 		return 0;
 	}
 
-	dim3 blockSize;
+	dim3 blockSize = dim3(256);
 	dim3 gridSize;
 
-	blockSize = dim3(512);
-	gridSize  = make_grid(blockSize, geometry.count);
-	cudaInitPolyLights<<<gridSize, blockSize>>>(geometry, shaders, *lights);
+	gridSize  = make_grid(blockSize, dim3(geometry.count));
+	cudaInitPolyLights<<<gridSize, blockSize>>>(geometry, shaders.items, *lights);
 
 	thrust::device_ptr<PolyLight> thrustBuffer(buffer);
 	thrust::device_ptr<PolyLight> thrustLights(*lights);
@@ -92,11 +100,16 @@ __host__ unsigned int cudaCreatePolyLights(const Geometry& geometry, const Shade
 		return 0;
 	}
 
+	gridSize  = make_grid(blockSize, dim3(numLights));
+	cudaCalculatePolyLightsCDF<<<gridSize, blockSize>>>(geometry, numLights, buffer);
+
 	thrust::inclusive_scan(thrustBuffer, thrustBuffer + numLights, thrustLights, PolyLightCdfBinaryOp());
 	cudaFree(buffer);
 
-	blockSize = dim3(256);
-	gridSize  = make_grid(blockSize, numLights);
-	cudaCalculatePolyLightsCDF<<<gridSize, blockSize>>>(geometry, numLights, *lights);
+	PolyLight lastElement;
+	cudaMemcpy(&lastElement, (*lights) + (numLights-1), sizeof(PolyLight), cudaMemcpyDeviceToHost);
+
+	gridSize  = make_grid(blockSize, dim3(numLights));
+	cudaNormalizePolyLightsCDF<<<gridSize, blockSize>>>(numLights, *lights, lastElement.cdf);
 	return numLights;
 }

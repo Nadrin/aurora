@@ -49,6 +49,7 @@
     <ClInclude Include="..\..\src\util\hitpoint.h" />
     <ClInclude Include="..\..\src\util\light.h" />
     <ClInclude Include="..\..\src\util\math.h" />
+    <ClInclude Include="..\..\src\util\photon.h" />
     <ClInclude Include="..\..\src\util\primitive.h" />
     <ClInclude Include="..\..\src\util\ray.h" />
     <ClInclude Include="..\..\src\util\shader.h" />

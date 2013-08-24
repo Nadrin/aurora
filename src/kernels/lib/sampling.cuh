@@ -76,6 +76,31 @@ inline __device__ void sampleTriangle(const float u1, const float u2, float& u, 
 	v = u2 * sqrtu1;
 }
 
+// Sampling: 1D discrete poly light array
+inline __device__ unsigned int sampleLightArray(const float u, const unsigned int numLights, const PolyLight* lights)
+{
+	int imin = 0;
+	int imax = numLights-1;
+	float distmin, distmax;
+
+	do {
+		const int imid = (imin + imax) / 2;
+		distmin = fabsf(lights[imin].cdf - u);
+		distmax = fabsf(lights[imax].cdf - u);
+
+		if(distmin < distmax)
+			imax  = imid;
+		else 
+			imin  = imid;
+	} while((imax - imin) > 1);
+
+	distmin = fabsf(lights[imin].cdf - u);
+	distmax = fabsf(lights[imax].cdf - u);
+
+	if(distmin < distmax) return imin;
+	else return imax;
+}
+
 // Monte Carlo heuristics
 inline __device__ float balanceHeuristic(
 	const unsigned int n1, const float pdf1,

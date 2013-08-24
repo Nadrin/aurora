@@ -13,7 +13,7 @@ PhotonMapper::PhotonMapper() : m_pixels(NULL), m_rays(NULL), m_framebuffer(NULL)
 	m_primaryHits(NULL), m_lights(NULL) 
 {
 	m_numLights  = 0;
-	m_numPhotons = 500;
+	m_numPhotons = 5000;
 }
 
 PhotonMapper::~PhotonMapper()
@@ -32,6 +32,8 @@ MStatus PhotonMapper::createFrame(const unsigned int width, const unsigned int h
 			throw std::exception();
 		if(gpu::cudaMalloc(&m_pixels, sizeof(float4) * numPixels) != gpu::cudaSuccess)
 			throw std::exception();
+		if(gpu::cudaMalloc(&m_photons, sizeof(Photon) * m_numPhotons) != gpu::cudaSuccess)
+			throw std::exception();
 
 		if((m_framebuffer = new RV_PIXEL[numPixels]) == NULL)
 			throw std::exception();
@@ -46,7 +48,7 @@ MStatus PhotonMapper::createFrame(const unsigned int width, const unsigned int h
 	m_size     = Dim(width, height, samples);
 
 	Renderer::generateRays(camera, m_size, m_region, m_rays, m_primaryHits);
-	Renderer::setupRNG(&m_rng, m_numPhotons, 666);
+	Renderer::setupRNG(&m_rng, width * height * samples, GetTickCount());
 	return MS::kSuccess;
 }
 
@@ -56,19 +58,21 @@ MStatus PhotonMapper::update()
 		gpu::cudaFree(m_lights);
 
 	m_numLights = cudaCreatePolyLights(m_scene->geometry(), m_scene->shaders(), &m_lights);
+	if(!m_lights) return MS::kInsufficientMemory;
 
-	if(!m_lights)
-		return MS::kInsufficientMemory;
+	const unsigned int numRays = m_size.width * m_size.height * m_size.depth;
+	cudaRaycastPrimary(m_scene->geometry(), numRays, m_rays, m_primaryHits);
 	return MS::kSuccess;
 }
 
 MStatus PhotonMapper::destroyFrame()
 {
-	if(m_rays) gpu::cudaFree(m_rays);
-	if(m_primaryHits) gpu::cudaFree(m_primaryHits);
-	if(m_pixels) gpu::cudaFree(m_pixels);
-	if(m_rng) gpu::cudaFree(m_rng);
-	if(m_lights) gpu::cudaFree(m_lights);
+	gpu::cudaFree(m_rays);
+	gpu::cudaFree(m_primaryHits);
+	gpu::cudaFree(m_pixels);
+	gpu::cudaFree(m_rng);
+	gpu::cudaFree(m_lights);
+	gpu::cudaFree(m_photons);
 
 	delete[] m_framebuffer;
 
@@ -78,6 +82,7 @@ MStatus PhotonMapper::destroyFrame()
 	m_framebuffer = NULL;
 	m_rng         = NULL;
 	m_lights      = NULL;
+	m_photons     = NULL;
 
 	return MS::kSuccess;
 }
@@ -91,8 +96,10 @@ MStatus PhotonMapper::setRegion(const Rect& region)
 MStatus PhotonMapper::render(bool ipr)
 {
 	const unsigned int numRays = m_size.width * m_size.height * m_size.depth;
-	gpu::cudaMemset(m_pixels, 0, sizeof(float4) * m_size.width * m_size.height);
-	//Renderer::drawPixels(m_size, m_region, m_primaryHits, m_pixels);
+
+	cudaPhotonTrace(m_rng, m_scene->geometry(), m_scene->shaders(),
+		m_numLights, m_lights, m_numPhotons, m_photons, numRays, m_primaryHits);
+	Renderer::drawPixels(m_size, m_region, m_primaryHits, m_pixels);
 	return MS::kSuccess;
 }
 

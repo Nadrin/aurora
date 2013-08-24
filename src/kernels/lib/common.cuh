@@ -26,6 +26,22 @@ inline __host__ dim3 make_grid(const dim3& blockSize, const dim3& domainSize)
 }
 
 // Shading space math
+inline __device__ float3 getPosition(const Geometry& geometry, const unsigned int index,
+	const float u, const float v)
+{
+	Primitive3 buffer;
+	buffer.readPoints(geometry.vertices + index * Geometry::TriangleParams);
+	return bclerp(buffer.v1, buffer.v2, buffer.v3, u, v);
+}
+
+inline __device__ float3 getNormal(const Geometry& geometry, const unsigned int index,
+	const float u, const float v)
+{
+	Primitive3 buffer;
+	buffer.readValues(geometry.normals + index * Geometry::TriangleParams);
+	return normalize(bclerp(buffer.v1, buffer.v2, buffer.v3, u, v));
+}
+
 inline __device__ void getBasisVectors(const Geometry& geometry, const unsigned int index,
 	const float u, const float v, float3& N, float3& S, float3& T)
 {
