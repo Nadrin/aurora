@@ -173,6 +173,9 @@
     <ClInclude Include="..\..\src\util\photon.h">
       <Filter>Source Root\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\util\emitter.h">
+      <Filter>Source Root\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">
@@ -195,7 +198,7 @@
     <CudaCompile Include="..\..\src\kernels\photonMapper.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\kernels\polyLight.cu">
+    <CudaCompile Include="..\..\src\kernels\emitter.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
   </ItemGroup>

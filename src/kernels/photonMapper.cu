@@ -36,7 +36,7 @@ __host__ void cudaRaycastPrimary(const Geometry& geometry, const unsigned int nu
 }
 
 __global__ static void cudaGeneratePhotons(RNG* grng, const Geometry geometry, const Shader* shaders,
-	const unsigned int numLights, const PolyLight* lights,
+	const unsigned int numEmitters, const Emitter* lights,
 	const unsigned int numPhotons, Photon* photons)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
@@ -44,7 +44,7 @@ __global__ static void cudaGeneratePhotons(RNG* grng, const Geometry geometry, c
 		return;
 
 	RNG rng = grng[threadId];
-	const unsigned int lightIndex = sampleLightArray(curand_uniform(&rng), numLights, lights);
+	const unsigned int lightIndex = sampleLightArray(curand_uniform(&rng), numEmitters, lights);
 	const unsigned int triangleID = lights[lightIndex].triangleID;
 
 	float u, v;
@@ -79,13 +79,13 @@ __global__ void cudaDebugPhotons(const unsigned int numHitPoints, HitPoint* hitp
 }
 
 __host__ void cudaPhotonTrace(RNG* rng, const Geometry& geometry, const ShadersArray& shaders, 
-	const unsigned int numLights, const PolyLight* lights,
+	const unsigned int numEmitters, const Emitter* lights,
 	const unsigned int numPhotons, Photon* photons,
 	const unsigned int numHitPoints, HitPoint* hitpoints)
 {
 	dim3 blockSize, gridSize;
 
-	if(numLights == 0)
+	if(numEmitters == 0)
 		return;
 
 	// Generate photons
@@ -94,8 +94,8 @@ __host__ void cudaPhotonTrace(RNG* rng, const Geometry& geometry, const ShadersA
 
 	cudaGeneratePhotons<<<gridSize, blockSize>>>(
 		rng, geometry, shaders.items, 
-		numLights, lights, numPhotons, photons);
+		numEmitters, lights, numPhotons, photons);
 
-	gridSize = make_grid(blockSize, dim3(numHitPoints));
-	cudaDebugPhotons<<<gridSize, blockSize>>>(numHitPoints, hitpoints, numPhotons, photons);
+	//gridSize = make_grid(blockSize, dim3(numHitPoints));
+	//cudaDebugPhotons<<<gridSize, blockSize>>>(numHitPoints, hitpoints, numPhotons, photons);
 }

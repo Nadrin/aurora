@@ -77,7 +77,7 @@ inline __device__ void sampleTriangle(const float u1, const float u2, float& u, 
 }
 
 // Sampling: 1D discrete poly light array
-inline __device__ unsigned int sampleLightArray(const float u, const unsigned int numLights, const PolyLight* lights)
+inline __device__ unsigned int sampleLightArray(const float u, const unsigned int numLights, const Emitter* lights)
 {
 	int imin = 0;
 	int imax = numLights-1;

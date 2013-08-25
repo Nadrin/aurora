@@ -7,7 +7,7 @@
 
 #include <core/renderer.h>
 
-#include <util/light.h>
+#include <util/emitter.h>
 #include <util/photon.h>
 
 namespace Aurora {
@@ -35,10 +35,10 @@ protected:
 	RNG*       m_rng;
 
 	HitPoint*    m_primaryHits;
-	PolyLight*   m_lights;
+	Emitter*     m_emitters;
 	Photon*      m_photons;
 
-	unsigned int m_numLights;
+	unsigned int m_numEmitters;
 	unsigned int m_numPhotons;
 
 	RV_PIXEL*  m_framebuffer;

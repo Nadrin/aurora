@@ -10,10 +10,10 @@
 using namespace Aurora;
 
 PhotonMapper::PhotonMapper() : m_pixels(NULL), m_rays(NULL), m_framebuffer(NULL), m_rng(NULL),
-	m_primaryHits(NULL), m_lights(NULL) 
+	m_primaryHits(NULL), m_emitters(NULL) 
 {
-	m_numLights  = 0;
-	m_numPhotons = 5000;
+	m_numEmitters = 0;
+	m_numPhotons  = 5000;
 }
 
 PhotonMapper::~PhotonMapper()
@@ -54,11 +54,11 @@ MStatus PhotonMapper::createFrame(const unsigned int width, const unsigned int h
 
 MStatus PhotonMapper::update()
 {
-	if(m_lights)
-		gpu::cudaFree(m_lights);
+	if(m_emitters)
+		gpu::cudaFree(m_emitters);
 
-	m_numLights = cudaCreatePolyLights(m_scene->geometry(), m_scene->shaders(), &m_lights);
-	if(!m_lights) return MS::kInsufficientMemory;
+	m_numEmitters = cudaCreateEmitters(m_scene->geometry(), m_scene->shaders(), &m_emitters);
+	if(!m_emitters) return MS::kInsufficientMemory;
 
 	const unsigned int numRays = m_size.width * m_size.height * m_size.depth;
 	cudaRaycastPrimary(m_scene->geometry(), numRays, m_rays, m_primaryHits);
@@ -71,7 +71,7 @@ MStatus PhotonMapper::destroyFrame()
 	gpu::cudaFree(m_primaryHits);
 	gpu::cudaFree(m_pixels);
 	gpu::cudaFree(m_rng);
-	gpu::cudaFree(m_lights);
+	gpu::cudaFree(m_emitters);
 	gpu::cudaFree(m_photons);
 
 	delete[] m_framebuffer;
@@ -81,7 +81,7 @@ MStatus PhotonMapper::destroyFrame()
 	m_pixels      = NULL;
 	m_framebuffer = NULL;
 	m_rng         = NULL;
-	m_lights      = NULL;
+	m_emitters    = NULL;
 	m_photons     = NULL;
 
 	return MS::kSuccess;
@@ -98,7 +98,7 @@ MStatus PhotonMapper::render(bool ipr)
 	const unsigned int numRays = m_size.width * m_size.height * m_size.depth;
 
 	cudaPhotonTrace(m_rng, m_scene->geometry(), m_scene->shaders(),
-		m_numLights, m_lights, m_numPhotons, m_photons, numRays, m_primaryHits);
+		m_numEmitters, m_emitters, m_numPhotons, m_photons, numRays, m_primaryHits);
 	Renderer::drawPixels(m_size, m_region, m_primaryHits, m_pixels);
 	return MS::kSuccess;
 }
