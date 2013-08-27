@@ -112,47 +112,43 @@ inline __device__ float3 estimateDirectRadiance(const PhotonMapperParams& params
 	const BSDF&   bsdf   = shader.getBSDF(geometry, hp.triangleID, hp.u, hp.v);
 
 	Ray wi;
+	float3 Li, f;
+	float lightPdf, bsdfPdf, weight;
+
 	float3 L = make_float3(0.0f);
 	for(unsigned int i=0; i<light.samples; i++) {
 		float3 Ls = make_float3(0.0f);
 
-#if 1
 		// Sample light
 		wi = Ray(hp.position);
-
-		float lightPdf;
-		const float3 Li = light.sampleL(rng, wi, lightPdf);
+		Li = light.sampleL(rng, wi, lightPdf);
 		wi.offset();
 
 		if(lightPdf > 0.0f && !zero(Li)) {
-			const float3 f = bsdf.f(hp.wo, wi.dir);
+			float3 f = bsdf.f(hp.wo, wi.dir);
 			if(!zero(f) && light.visible(geometry, wi)) {
-				const float bsdfPdf = bsdf.pdf(hp.wo, wi.dir);
-				const float weight  = powerHeuristic(1, lightPdf, 1, bsdfPdf);
-				Ls = Ls + f * Li * (fmaxf(0.0f, dot(wi.dir, bsdf.N)));// * (weight / emitter.pdf));
-				//Ls = Ls + f * Li * fmaxf(0.0f, dot(wi.dir, bsdf.N)) * weight / emitter.pdf;
+				bsdfPdf = bsdf.pdf(hp.wo, wi.dir);
+				weight  = powerHeuristic(1, lightPdf, 1, bsdfPdf);
+				Ls = Ls + f * Li * (fmaxf(0.0f, dot(wi.dir, bsdf.N)) * weight / lightPdf);
 			}
 		}
-#endif
-#if 0
 
 		// Sample BSDF
 		wi = Ray(hp.position);
-
-		float bsdfPdf;
-		const float3 f = bsdf.samplef(rng, hp.wo, wi.dir, bsdfPdf);
+		f  = bsdf.samplef(rng, hp.wo, wi.dir, bsdfPdf);
 		wi.offset();
 
 		if(bsdfPdf > 0.0f && !zero(f)) {
-			const float weight = powerHeuristic(1, bsdfPdf, 1, emitter.pdf);
+			lightPdf = light.pdf(wi);
+			weight   = powerHeuristic(1, bsdfPdf, 1, lightPdf);
+
 			wi.t = Infinity;
-			if(emitter.visible(geometry, wi)) {
-				const float3 Li = emitter.power;
-				Ls = Ls + f * Li * fmaxf(0.0f, dot(wi.dir, bsdf.N));
-				//Ls = Ls + f *  Li * fmaxf(0.0f, dot(wi.dir, bsdf.N)) * weight / bsdfPdf;
+			if(light.visible(geometry, wi)) {
+				Li = light.L(-wi.dir);
+				Ls = Ls + f * Li * (fmaxf(0.0f, dot(wi.dir, bsdf.N)) * weight / bsdfPdf);
 			}
 		}
-#endif
+
 		L = L + Ls;
 	}
 

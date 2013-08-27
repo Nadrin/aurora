@@ -10,6 +10,12 @@ inline __device__ bool Light::isDeltaLight() const
 	return type != Light::AreaLight;
 }
 
+inline __device__ float3 Light::L(const float3& wi) const
+{
+	// Area light only
+	return (color * intensity) * fmaxf(0.0f, dot(direction, wi));
+}
+
 inline __device__ float3 Light::sampleL(RNG* rng, Ray& ray, float& pdf) const
 {
 	switch(type) {
@@ -18,7 +24,7 @@ inline __device__ float3 Light::sampleL(RNG* rng, Ray& ray, float& pdf) const
 		ray.t   = length(ray.dir);
 		ray.dir = ray.dir / ray.t;
 		pdf     = 1.0f;
-		return (color * intensity);
+		return (color * intensity);// / ray.t*ray.t;
 	case DirectionalLight:
 		ray.dir = -direction;
 		ray.t   = Infinity;
@@ -33,10 +39,9 @@ inline __device__ float3 Light::sampleL(RNG* rng, Ray& ray, float& pdf) const
 		}
 		ray.t   = length(ray.dir);
 		ray.dir = ray.dir / ray.t;
-		pdf     = invarea;
-		break;
+		pdf     = Light::pdf(ray);
+		return (color * intensity) * fmaxf(0.0f, dot(direction, -ray.dir));
 	}
-	return (color * intensity) * fmaxf(0.0f, dot(ray.dir, -direction));
 }
 
 inline __device__ bool Light::visible(const Geometry& geometry, const Ray& ray) const
@@ -44,7 +49,13 @@ inline __device__ bool Light::visible(const Geometry& geometry, const Ray& ray) 
 	return !intersectAny(geometry, ray);
 }
 
-inline __device__ float  Light::pdf() const
+inline __device__ float  Light::pdf(const Ray& ray) const
 {
-	return invarea;
+	switch(type) {
+	case PointLight:
+	case DirectionalLight:
+		return 0.0f;
+	case AreaLight:
+		return 1.0f / (fmaxf(0.0f, dot(direction, -ray.dir)) * area);
+	}
 }

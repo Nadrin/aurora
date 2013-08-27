@@ -23,7 +23,7 @@ public:
 	LightType type;
 
 	float  intensity;
-	float  invarea;
+	float  area;
 	short  samples;
 
 	float3 position;
@@ -32,10 +32,11 @@ public:
 
 	float3 e1, e2;
 
+	__device__ float3 L(const float3& wi) const;
 	__device__ float3 sampleL(RNG* rng, Ray& ray, float& pdf) const;
 	__device__ bool   visible(const Geometry& geometry, const Ray& ray) const;
 
-	__device__ float  pdf() const;
+	__device__ float  pdf(const Ray& ray) const;
 	__device__ bool   isDeltaLight() const;
 
 };
