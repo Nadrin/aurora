@@ -17,9 +17,12 @@ public:
 	Ray() : t(Infinity)
 	{ }
 
+	__host__ __device__
+	Ray(const float3& p) : pos(p), t(Infinity)
+	{ }
+	
 	__host__ __device__ 
-	Ray(const float3& p, const float3& d, const float t=Infinity) : 
-		pos(p), dir(d), t(t)
+	Ray(const float3& p, const float3& d, const float t=Infinity) : pos(p), dir(d), t(t)
 	{ }
 
 	__device__

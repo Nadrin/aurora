@@ -20,9 +20,13 @@
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\maya\renderCommand.cpp" />
     <ClCompile Include="..\..\src\render\debugPattern.cpp" />
-    <ClCompile Include="..\..\src\render\monteCarloRaytracer.cpp" />
+    <ClCompile Include="..\..\src\render\monteCarloRaytracer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\src\render\photonMapper.cpp" />
-    <ClCompile Include="..\..\src\render\raycaster.cpp" />
+    <ClCompile Include="..\..\src\render\raycaster.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -41,6 +45,7 @@
     <ClInclude Include="..\..\src\render\debugPattern.h" />
     <ClInclude Include="..\..\src\render\monteCarloRaytracer.h" />
     <ClInclude Include="..\..\src\render\photonMapper.h" />
+    <ClInclude Include="..\..\src\render\photonMapperParams.h" />
     <ClInclude Include="..\..\src\render\raycaster.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
     <ClInclude Include="..\..\src\util\array.h" />
@@ -87,13 +92,20 @@
     <ClInclude Include="..\..\src\kernels\lib\transform.cuh">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\emitter.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
     <None Include="..\..\src\maya\aurora.mel" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\src\kernels\monteCarloRaytracer.cu" />
+    <CudaCompile Include="..\..\src\kernels\monteCarloRaytracer.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
     <CudaCompile Include="..\..\src\kernels\photonMapper.cu" />
     <CudaCompile Include="..\..\src\kernels\emitter.cu" />
-    <CudaCompile Include="..\..\src\kernels\raycaster.cu" />
+    <CudaCompile Include="..\..\src\kernels\raycaster.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
     <CudaCompile Include="..\..\src\kernels\rebuilder.cu" />
     <CudaCompile Include="..\..\src\kernels\utility.cu" />
   </ItemGroup>

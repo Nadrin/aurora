@@ -8,6 +8,7 @@
 #ifndef __CUDACC__
 #include <maya/MColor.h>
 #include <maya/MVector.h>
+#include <maya/MMatrix.h>
 #include <maya/MFloatVector.h>
 #endif
 
@@ -58,6 +59,18 @@ inline float3 make_float3(const MVector& vector)
 { return gpu::make_float3(float(vector.x), float(vector.y), float(vector.z)); }
 inline float3 make_float3(const MFloatVector& vector)
 { return gpu::make_float3(vector.x, vector.y, vector.z); }
+
+inline float3 operator*(const MMatrix& matrix, const float3& v)
+{
+	float m[4][4];
+	float3 result;
+
+	matrix.get(m);
+	result.x = m[0][0] * v.x + m[1][0] * v.y + m[2][0] * v.z + m[3][0];
+	result.y = m[0][1] * v.x + m[1][1] * v.y + m[2][1] * v.z + m[3][1];
+	result.z = m[0][2] * v.x + m[1][2] * v.y + m[2][2] * v.z + m[3][2];
+	return result;
+}
 #endif
 
 // Check for vector zero

@@ -19,6 +19,7 @@
 
 #include <util/emitter.h>
 #include <util/photon.h>
+#include <render/photonMapperParams.h>
 
 // NVCC does not properly support namespaces thus kernel wrapper functions need to be defined outside of Aurora scope.
 
@@ -43,9 +44,9 @@ void cudaRaytraceMonteCarlo(const Aurora::Geometry& geometry, const Aurora::Shad
 
 // Photon Mapping
 unsigned int cudaCreateEmitters(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, Aurora::Emitter** emitters);
-void cudaRaycastPrimary(const Aurora::Geometry& geometry, const unsigned int numRays, Aurora::Ray* rays, Aurora::HitPoint* hitpoints);
+void cudaRaycastPrimary(const Aurora::PhotonMapperParams& params, const Aurora::Geometry& geometry,
+	Aurora::Ray* rays, Aurora::HitPoint* hitpoints);
 
-void cudaPhotonTrace(RNG* rng, const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, 
-	const unsigned int numEmitters, const Aurora::Emitter* emitters,
-	const unsigned int numPhotons, Aurora::Photon* photons,
-	const unsigned int numHitPoints, Aurora::HitPoint* hitpoints);
+void cudaPhotonTrace(const Aurora::PhotonMapperParams& params, RNG* rng,
+	const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, const Aurora::LightsArray& lights,
+	const Aurora::Emitter* emitters, Aurora::Photon* photons, Aurora::HitPoint* hitpoints);

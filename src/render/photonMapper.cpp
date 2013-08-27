@@ -12,8 +12,12 @@ using namespace Aurora;
 PhotonMapper::PhotonMapper() : m_pixels(NULL), m_rays(NULL), m_framebuffer(NULL), m_rng(NULL),
 	m_primaryHits(NULL), m_emitters(NULL) 
 {
-	m_numEmitters = 0;
-	m_numPhotons  = 5000;
+	m_params.numEmitters        = 0;
+	m_params.numLights          = 0;
+	m_params.numHitPoints       = 0;
+
+	m_params.numPhotons         = 500;
+	m_params.numEmitterSamples  = 16;
 }
 
 PhotonMapper::~PhotonMapper()
@@ -32,7 +36,7 @@ MStatus PhotonMapper::createFrame(const unsigned int width, const unsigned int h
 			throw std::exception();
 		if(gpu::cudaMalloc(&m_pixels, sizeof(float4) * numPixels) != gpu::cudaSuccess)
 			throw std::exception();
-		if(gpu::cudaMalloc(&m_photons, sizeof(Photon) * m_numPhotons) != gpu::cudaSuccess)
+		if(gpu::cudaMalloc(&m_photons, sizeof(Photon) * m_params.numPhotons) != gpu::cudaSuccess)
 			throw std::exception();
 
 		if((m_framebuffer = new RV_PIXEL[numPixels]) == NULL)
@@ -57,11 +61,13 @@ MStatus PhotonMapper::update()
 	if(m_emitters)
 		gpu::cudaFree(m_emitters);
 
-	m_numEmitters = cudaCreateEmitters(m_scene->geometry(), m_scene->shaders(), &m_emitters);
+	m_params.numEmitters = cudaCreateEmitters(m_scene->geometry(), m_scene->shaders(), &m_emitters);
 	if(!m_emitters) return MS::kInsufficientMemory;
 
-	const unsigned int numRays = m_size.width * m_size.height * m_size.depth;
-	cudaRaycastPrimary(m_scene->geometry(), numRays, m_rays, m_primaryHits);
+	m_params.numHitPoints = m_size.width * m_size.height * m_size.depth;
+	m_params.numLights    = (unsigned int)m_scene->lights().size;
+
+	cudaRaycastPrimary(m_params, m_scene->geometry(), m_rays, m_primaryHits);
 	return MS::kSuccess;
 }
 
@@ -95,10 +101,8 @@ MStatus PhotonMapper::setRegion(const Rect& region)
 
 MStatus PhotonMapper::render(bool ipr)
 {
-	const unsigned int numRays = m_size.width * m_size.height * m_size.depth;
-
-	cudaPhotonTrace(m_rng, m_scene->geometry(), m_scene->shaders(),
-		m_numEmitters, m_emitters, m_numPhotons, m_photons, numRays, m_primaryHits);
+	cudaPhotonTrace(m_params, m_rng, m_scene->geometry(), m_scene->shaders(), m_scene->lights(),
+		m_emitters, m_photons, m_primaryHits);
 	Renderer::drawPixels(m_size, m_region, m_primaryHits, m_pixels);
 	return MS::kSuccess;
 }

@@ -7,20 +7,13 @@
 
 namespace Aurora {
 
-class HitPoint
+struct PhotonMapperParams
 {
-public:
-	__host__ __device__
-	HitPoint()
-		: triangleID(-1), u(0.0f), v(0.0f) { }
-
-	float3 color;
-	float3 position;
-	float3 wo;
-
-	float  u;
-	float  v;
-	int    triangleID;
+	unsigned int numPhotons;
+	unsigned int numEmitters;
+	unsigned int numLights;
+	unsigned int numHitPoints;
+	unsigned int numEmitterSamples;
 };
 
 } // Aurora

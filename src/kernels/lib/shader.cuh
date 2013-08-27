@@ -14,7 +14,7 @@ inline __device__ BSDF Shader::getBSDF(const Geometry& geometry, const unsigned 
 	switch(type) {
 	case Shader::LambertShader:
 		bsdf.type = BSDF::BSDF_Lambert;
-		bsdf.spectrum = color * diffuse;
+		bsdf.spectrum = diffuseColor * diffuse;
 		break;
 	case Shader::PhongShader:
 		bsdf.type = BSDF::BSDF_Phong;

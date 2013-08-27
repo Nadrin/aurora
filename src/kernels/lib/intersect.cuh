@@ -33,7 +33,7 @@ inline __device__ float max(const float* vertices, const int axis)
 }
 
 // Intersect any triangle
-inline __device__ bool intersectAny(const Geometry& geometry, Ray& ray)
+inline __device__ bool intersectAny(const Geometry& geometry, const Ray& ray, unsigned int& triangleID)
 {
 	Stack<TraversalState, AURORA_INTSTACK_DEPTH> stack;
 
@@ -60,10 +60,14 @@ inline __device__ bool intersectAny(const Geometry& geometry, Ray& ray)
 		float u, v;
 		float t;
 
-		if(ray.intersect(triangle1, u, v, t) && t > Epsilon && t < ray.t)
+		if(ray.intersect(triangle1, u, v, t) && t > Epsilon && t < ray.t) {
+			triangleID = state.index;
 			return true;
-		if(ray.intersect(triangle2, u, v, t) && t > Epsilon && t < ray.t)
+		}
+		if(ray.intersect(triangle2, u, v, t) && t > Epsilon && t < ray.t) {
+			triangleID = state.index+1;
 			return true;
+		}
 
 		state.axis = (state.axis + 1) % 3;
 		unsigned int L = 2*state.index + 2;
@@ -79,6 +83,12 @@ inline __device__ bool intersectAny(const Geometry& geometry, Ray& ray)
 		stack.push(TraversalState(L, state.axis, state.range));
 	}
 	return false;
+}
+
+inline __device__ bool intersectAny(const Geometry& geometry, const Ray& ray)
+{
+	unsigned int _unused;
+	return intersectAny(geometry, ray, _unused);
 }
 
 // Intersect closest triangle

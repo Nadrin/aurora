@@ -77,16 +77,16 @@ inline __device__ void sampleTriangle(const float u1, const float u2, float& u, 
 }
 
 // Sampling: 1D discrete poly light array
-inline __device__ unsigned int sampleLightArray(const float u, const unsigned int numLights, const Emitter* lights)
+inline __device__ unsigned int sampleEmitters(const float u, const unsigned int numEmitters, const Emitter* emitters)
 {
 	int imin = 0;
-	int imax = numLights-1;
+	int imax = numEmitters-1;
 	float distmin, distmax;
 
 	do {
 		const int imid = (imin + imax) / 2;
-		distmin = fabsf(lights[imin].cdf - u);
-		distmax = fabsf(lights[imax].cdf - u);
+		distmin = fabsf(emitters[imin].cdf - u);
+		distmax = fabsf(emitters[imax].cdf - u);
 
 		if(distmin < distmax)
 			imax  = imid;
@@ -94,8 +94,8 @@ inline __device__ unsigned int sampleLightArray(const float u, const unsigned in
 			imin  = imid;
 	} while((imax - imin) > 1);
 
-	distmin = fabsf(lights[imin].cdf - u);
-	distmax = fabsf(lights[imax].cdf - u);
+	distmin = fabsf(emitters[imin].cdf - u);
+	distmax = fabsf(emitters[imax].cdf - u);
 
 	if(distmin < distmax) return imin;
 	else return imax;

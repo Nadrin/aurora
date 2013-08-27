@@ -20,7 +20,7 @@ using namespace Aurora;
 struct ValidEmitterPredicate
 {
 	__device__ bool operator()(const Emitter& e)
-	{ return e.emission > 0.0f; }
+	{ return e.pdf > 0.0f; }
 };
 
 struct EmitterCdfBinaryOp
@@ -28,28 +28,27 @@ struct EmitterCdfBinaryOp
 	__device__ Emitter operator()(const Emitter& a, const Emitter& b)
 	{
 		Emitter result;
-		result.emission   = b.emission;
+		result.pdf        = b.pdf;
+		result.power      = b.power;
 		result.triangleID = b.triangleID;
 		result.cdf        = a.cdf + b.cdf;
 		return result;
 	}
 };
 
-__global__ static void cudaInitEmitters(const Geometry geometry, const Shader* shaders, Emitter* lights)
+__global__ static void cudaInitEmitters(const Geometry geometry, const Shader* shaders, Emitter* emitters)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= geometry.count)
 		return;
 
 	const unsigned int shaderID = getSafeID(geometry.shaders[threadId]);
-	const float emission        = shaders[shaderID].emission;
 
-	lights[threadId].triangleID = threadId;
-	lights[threadId].emission   = emission;
-	lights[threadId].cdf        = emission;
+	emitters[threadId].power      = shaders[shaderID].emissionColor;
+	emitters[threadId].pdf        = shaders[shaderID].emission;
+	emitters[threadId].triangleID = threadId;
 }
 
-#if 0
 __global__ static void cudaCalculateEmittersCDF(const Geometry geometry,
 	const unsigned int numEmitters, Emitter* lights)
 {
@@ -62,9 +61,9 @@ __global__ static void cudaCalculateEmittersCDF(const Geometry geometry,
 	
 	const float area = triangle.area();
 	lights[threadId].area = area;
-	lights[threadId].cdf  = lights[threadId].emission;// * area;
+	lights[threadId].cdf  = lights[threadId].pdf; // * area;
+	lights[threadId].pdf  = 1.0f / area;
 }
-#endif
 
 __global__ static void cudaNormalizeEmittersCDF(const unsigned int numEmitters, Emitter* lights,
 	const float cdfIntegral)
@@ -72,17 +71,19 @@ __global__ static void cudaNormalizeEmittersCDF(const unsigned int numEmitters, 
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= numEmitters)
 		return;
+
+	//lights[threadId].pdf /= (cdfIntegral * numEmitters);
 	lights[threadId].cdf /= cdfIntegral;
 }
 
-__host__ unsigned int cudaCreateEmitters(const Geometry& geometry, const ShadersArray& shaders, Emitter** lights)
+unsigned int cudaCreateEmitters(const Geometry& geometry, const ShadersArray& shaders, Emitter** emitters)
 {
 	Emitter* buffer;
 
-	*lights = NULL;
+	*emitters = NULL;
 	if(cudaMalloc(&buffer, sizeof(Emitter) * geometry.count) != cudaSuccess)
 		return 0;
-	if(cudaMalloc(lights, sizeof(Emitter) * geometry.count) != cudaSuccess) {
+	if(cudaMalloc(emitters, sizeof(Emitter) * geometry.count) != cudaSuccess) {
 		cudaFree(buffer);
 		return 0;
 	}
@@ -91,28 +92,28 @@ __host__ unsigned int cudaCreateEmitters(const Geometry& geometry, const Shaders
 	dim3 gridSize;
 
 	gridSize  = make_grid(blockSize, dim3(geometry.count));
-	cudaInitEmitters<<<gridSize, blockSize>>>(geometry, shaders.items, *lights);
+	cudaInitEmitters<<<gridSize, blockSize>>>(geometry, shaders.items, *emitters);
 
 	thrust::device_ptr<Emitter> thrustBuffer(buffer);
-	thrust::device_ptr<Emitter> thrustLights(*lights);
+	thrust::device_ptr<Emitter> thrustEmitters(*emitters);
 
-	const auto thrustBufferEnd   = thrust::copy_if(thrustLights, thrustLights + geometry.count, thrustBuffer, ValidEmitterPredicate());
+	const auto thrustBufferEnd     = thrust::copy_if(thrustEmitters, thrustEmitters + geometry.count, thrustBuffer, ValidEmitterPredicate());
 	const unsigned int numEmitters = thrustBufferEnd - thrustBuffer;
 	if(numEmitters == 0) {
 		cudaFree(buffer);
 		return 0;
 	}
 
-	//gridSize  = make_grid(blockSize, dim3(numEmitters));
-	//cudaCalculateEmittersCDF<<<gridSize, blockSize>>>(geometry, numEmitters, buffer);
+	gridSize  = make_grid(blockSize, dim3(numEmitters));
+	cudaCalculateEmittersCDF<<<gridSize, blockSize>>>(geometry, numEmitters, buffer);
 
-	thrust::inclusive_scan(thrustBuffer, thrustBuffer + numEmitters, thrustLights, EmitterCdfBinaryOp());
+	thrust::inclusive_scan(thrustBuffer, thrustBuffer + numEmitters, thrustEmitters, EmitterCdfBinaryOp());
 	cudaFree(buffer);
 
 	Emitter lastElement;
-	cudaMemcpy(&lastElement, (*lights) + (numEmitters-1), sizeof(Emitter), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&lastElement, (*emitters) + (numEmitters-1), sizeof(Emitter), cudaMemcpyDeviceToHost);
 
 	gridSize  = make_grid(blockSize, dim3(numEmitters));
-	cudaNormalizeEmittersCDF<<<gridSize, blockSize>>>(numEmitters, *lights, lastElement.cdf);
+	cudaNormalizeEmittersCDF<<<gridSize, blockSize>>>(numEmitters, *emitters, lastElement.cdf);
 	return numEmitters;
 }

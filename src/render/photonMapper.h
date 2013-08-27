@@ -6,6 +6,7 @@
 #pragma once
 
 #include <core/renderer.h>
+#include <render/photonMapperParams.h>
 
 #include <util/emitter.h>
 #include <util/photon.h>
@@ -38,8 +39,7 @@ protected:
 	Emitter*     m_emitters;
 	Photon*      m_photons;
 
-	unsigned int m_numEmitters;
-	unsigned int m_numPhotons;
+	PhotonMapperParams m_params;
 
 	RV_PIXEL*  m_framebuffer;
 	Rect       m_region;

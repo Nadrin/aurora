@@ -248,14 +248,12 @@ MStatus Scene::updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, O
 		const MObject node = nodes[i];
 		const MFnLambertShader dagLambertShader(node);
 
-		buffer[i].diffuse = dagLambertShader.diffuseCoeff();
+		buffer[i].diffuseColor  = make_float3(dagLambertShader.color());
+		buffer[i].emissionColor = make_float3(dagLambertShader.incandescence());
+		buffer[i].diffuse       = dagLambertShader.diffuseCoeff();
 
 		float _unused;
 		dagLambertShader.incandescence().get(MColor::kHSV, _unused, _unused, buffer[i].emission);
-		if(buffer[i].emission > 0.0f)
-			buffer[i].color = make_float3(dagLambertShader.incandescence());
-		else
-			buffer[i].color = make_float3(dagLambertShader.color());
 
 		//buffer[i].texture[Shader::ChannelColor] = getConnectedIndex(MFn::kFileTexture, MObjectHandle(node), "color", hTextures);
 		
@@ -316,7 +314,7 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 		const MFnLight dagLight(node);
 
 		buffer[i].color     = make_float3(dagLight.color());
-		buffer[i].intensity = dagLight.intensity() * Pi;
+		buffer[i].intensity = dagLight.intensity();
 		buffer[i].samples   = dagLight.numShadowSamples();
 
 		MTransformationMatrix transform;
@@ -329,30 +327,38 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 		switch(node.apiType()) {
 		case MFn::kAmbientLight:
 			{
-				buffer[i].type = Light::AmbientLight;
+				buffer[i].type    = Light::AmbientLight;
+				buffer[i].invarea = 0.0f;
 			}
 			break;
 		case MFn::kPointLight:
 			{
 				buffer[i].type     = Light::PointLight;
 				buffer[i].position = make_float3(transform.getTranslation(MSpace::kWorld));
+				buffer[i].invarea  = 0.0f;
 			}
 			break;
 		case MFn::kDirectionalLight:
 			{
 				buffer[i].type      = Light::DirectionalLight;
 				buffer[i].direction = make_float3(dagLight.lightDirection(0, MSpace::kWorld));
+				buffer[i].invarea   = 0.0f;
 			}
 			break;
 		case MFn::kAreaLight:
 			{
-				double scale[3];
-				transform.getScale(scale, MSpace::kWorld);
 
 				buffer[i].type      = Light::AreaLight;
 				buffer[i].direction = make_float3(dagLight.lightDirection(0, MSpace::kWorld));
-				buffer[i].position  = make_float3(transform.getTranslation(MSpace::kWorld));
-				buffer[i].scale     = make_float3(float(scale[0]), float(scale[1]), float(scale[2]));
+
+				const float3 v1     = transform.asMatrix() * make_float3(-0.5f, 0.5f, 0.0f);
+				const float3 v2     = transform.asMatrix() * make_float3(0.5f, 0.5f, 0.0f);
+				const float3 v3     = transform.asMatrix() * make_float3(-0.5f, -0.5f, 0.0f);
+
+				buffer[i].position  = v1;
+				buffer[i].e1        = v2 - v1;
+				buffer[i].e2        = v3 - v1;
+				buffer[i].invarea   = 1.0f / (length(buffer[i].e1) * length(buffer[i].e2));
 			}
 			break;
 		default:
