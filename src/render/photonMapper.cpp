@@ -7,10 +7,12 @@
 #include <render/photonMapper.h>
 #include <kernels/kernels.h>
 
+#include <maya/MProgressWindow.h>
+
 using namespace Aurora;
 
 PhotonMapper::PhotonMapper() : m_pixels(NULL), m_rays(NULL), m_framebuffer(NULL), m_rng(NULL),
-	m_primaryHits(NULL), m_emitters(NULL) 
+	m_hits(NULL), m_emitters(NULL) 
 {
 	m_params.numEmitters        = 0;
 	m_params.numLights          = 0;
@@ -26,20 +28,19 @@ PhotonMapper::~PhotonMapper()
 MStatus PhotonMapper::createFrame(const unsigned int width, const unsigned int height,
 	const unsigned short samples, Scene* scene, MDagPath& camera)
 {
-	const unsigned int numPixels = width * height;
-	const unsigned int numRays   = width * height * samples;
+	const unsigned int numRays = width * height;
 
 	try {
 		if(gpu::cudaMalloc(&m_rays, sizeof(Ray) * numRays) != gpu::cudaSuccess)
 			throw std::exception();
-		if(gpu::cudaMalloc(&m_primaryHits, sizeof(HitPoint) * numRays) != gpu::cudaSuccess)
+		if(gpu::cudaMalloc(&m_hits, sizeof(HitPoint) * numRays) != gpu::cudaSuccess)
 			throw std::exception();
-		if(gpu::cudaMalloc(&m_pixels, sizeof(float4) * numPixels) != gpu::cudaSuccess)
+		if(gpu::cudaMalloc(&m_pixels, sizeof(float4) * numRays) != gpu::cudaSuccess)
 			throw std::exception();
 		if(gpu::cudaMalloc(&m_photons, sizeof(Photon) * m_params.numPhotons) != gpu::cudaSuccess)
 			throw std::exception();
 
-		if((m_framebuffer = new RV_PIXEL[numPixels]) == NULL)
+		if((m_framebuffer = new RV_PIXEL[numRays]) == NULL)
 			throw std::exception();
 	} 
 	catch(const std::exception&) {
@@ -47,12 +48,12 @@ MStatus PhotonMapper::createFrame(const unsigned int width, const unsigned int h
 		return MS::kInsufficientMemory;
 	}
 
+	m_camera   = camera;
 	m_scene    = scene;
 	m_region   = Rect(0, width-1, 0, height-1);
 	m_size     = Dim(width, height, samples);
 
-	Renderer::generateRays(camera, m_size, m_region, m_rays, m_primaryHits);
-	Renderer::setupRNG(&m_rng, width * height * samples, GetTickCount());
+	Renderer::setupRNG(&m_rng, numRays, GetTickCount());
 	return MS::kSuccess;
 }
 
@@ -64,17 +65,15 @@ MStatus PhotonMapper::update()
 	m_params.numEmitters = cudaCreateEmitters(m_scene->geometry(), m_scene->shaders(), &m_emitters);
 	if(!m_emitters) return MS::kInsufficientMemory;
 
-	m_params.numHitPoints = m_size.width * m_size.height * m_size.depth;
+	m_params.numHitPoints = m_size.width * m_size.height;
 	m_params.numLights    = (unsigned int)m_scene->lights().size;
-
-	cudaRaycastPrimary(m_params, m_scene->geometry(), m_rays, m_primaryHits);
 	return MS::kSuccess;
 }
 
 MStatus PhotonMapper::destroyFrame()
 {
 	gpu::cudaFree(m_rays);
-	gpu::cudaFree(m_primaryHits);
+	gpu::cudaFree(m_hits);
 	gpu::cudaFree(m_pixels);
 	gpu::cudaFree(m_rng);
 	gpu::cudaFree(m_emitters);
@@ -83,7 +82,7 @@ MStatus PhotonMapper::destroyFrame()
 	delete[] m_framebuffer;
 
 	m_rays        = NULL;
-	m_primaryHits = NULL;
+	m_hits = NULL;
 	m_pixels      = NULL;
 	m_framebuffer = NULL;
 	m_rng         = NULL;
@@ -101,9 +100,30 @@ MStatus PhotonMapper::setRegion(const Rect& region)
 
 MStatus PhotonMapper::render(bool ipr)
 {
-	cudaPhotonTrace(m_params, m_rng, m_scene->geometry(), m_scene->shaders(), m_scene->lights(),
-		m_emitters, m_photons, m_primaryHits);
-	Renderer::drawPixels(m_size, m_region, m_primaryHits, m_pixels);
+	const float weight = 1.0f / m_size.depth;
+
+	MProgressWindow::reserve();
+	MProgressWindow::setInterruptable(true);
+	MProgressWindow::setTitle("Rendering ...");
+	MProgressWindow::setProgressRange(0, m_size.depth);
+	MProgressWindow::startProgress();
+
+	Renderer::clearPixels(m_size, m_pixels);
+	for(unsigned short i=0; i<m_size.depth; i++) {
+
+		Renderer::generateRays(m_camera, m_size, m_region, i, m_rays, m_hits);
+		cudaRaycastPrimary(m_params, m_scene->geometry(), m_rays, m_hits);
+		cudaPhotonTrace(m_params, m_rng, m_scene->geometry(), m_scene->shaders(), m_scene->lights(),
+			m_emitters, m_photons, m_hits);
+		Renderer::drawPixels(m_size, m_region, m_hits, weight, m_pixels);
+
+		if(MProgressWindow::isCancelled())
+			break;
+		MProgressWindow::advanceProgress(1);
+		Sleep(0);
+	}
+
+	MProgressWindow::endProgress();
 	return MS::kSuccess;
 }
 

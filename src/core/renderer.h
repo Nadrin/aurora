@@ -31,9 +31,11 @@ public:
 
 protected:
 	static void generateRays(const MDagPath& camera, const Dim& size, const Rect& region,
-		Ray* rays, HitPoint* hit);
-	static void drawPixels(const Dim& size, const Rect& region, const HitPoint* hit, void* pixels);
+		const unsigned short sampleID, Ray* rays, HitPoint* hit);
 	static bool setupRNG(RNG** rng, const size_t count, const unsigned int seed);
+
+	static void clearPixels(const Dim& size, void* pixels);
+	static void drawPixels(const Dim& size, const Rect& region, const HitPoint* hit, const float weight, void* pixels);
 };
 
 } // Aurora

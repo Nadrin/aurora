@@ -32,10 +32,11 @@ public:
 protected:
 	float4*	   m_pixels;
 	Scene*	   m_scene;
+	MDagPath   m_camera;
 	Ray*       m_rays;
 	RNG*       m_rng;
 
-	HitPoint*    m_primaryHits;
+	HitPoint*    m_hits;
 	Emitter*     m_emitters;
 	Photon*      m_photons;
 

@@ -40,8 +40,8 @@ __global__ static void cudaGenerateRaysKernel(const uint2 size, const Camera cam
 	hp.triangleID = -1;
 }
 
-__global__ static void cudaGenerateRaysKernelMultisample(const uint2 size, const unsigned short samples, const Camera camera, 
-	Ray* rays, HitPoint* hit)
+__global__ static void cudaGenerateRaysKernelMultisample(const uint2 size,
+	const short2 sample, const short swidth, const Camera camera, Ray* rays, HitPoint* hit)
 {
 	const unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
 	const unsigned int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -49,37 +49,31 @@ __global__ static void cudaGenerateRaysKernelMultisample(const uint2 size, const
 	if(x >= size.x || y >= size.y)
 		return;
 	
+	const unsigned int rayID = y * size.x + x;
+
 	const float2 delta  = make_float2(1.0f / float(size.x), 1.0f / float(size.y));
-	const short  s      = (short)sqrtf(samples);
-	const float2 sdelta = make_float2(delta.x / s, delta.y / s);
+	const float2 sdelta = make_float2(delta.x / swidth, delta.y / swidth);
 
-	const unsigned int pixelID = y * size.x + x;
-	unsigned int rayID = samples * pixelID;
+	const float2 pixel = make_float2(
+		x * delta.x - 0.5f + (sample.x * sdelta.x),
+		y * delta.y - 0.5f + (sample.y * sdelta.y));
 
-	for(short dy=-s/2; dy<s/2; dy++) {
-		for(short dx=-s/2; dx<s/2; dx++, rayID++) {
-			const float2 pixel = make_float2(
-				x * delta.x - 0.5f + (dx * sdelta.x),
-				y * delta.y - 0.5f + (dy * sdelta.y));
-
-			Ray& ray     = rays[rayID];
-			HitPoint& hp = hit[rayID];
+	Ray& ray     = rays[rayID];
+	HitPoint& hp = hit[rayID];
 		
-			ray.pos = camera.position;
-			ray.t   = Infinity;
-			ray.dir = normalize(
-				pixel.x * camera.right * camera.tanfov.x +
-				pixel.y * camera.up * camera.tanfov.y +
-				camera.forward);
+	ray.pos = camera.position;
+	ray.t   = Infinity;
+	ray.dir = normalize(
+		pixel.x * camera.right * camera.tanfov.x +
+		pixel.y * camera.up * camera.tanfov.y +
+		camera.forward);
 
-			hp.color      = make_float3(0.0f, 0.0f, 0.0f);
-			hp.triangleID = -1;
-		}
-	}
+	hp.color      = make_float3(0.0f, 0.0f, 0.0f);
+	hp.triangleID = -1;
 }
 
-__host__ void cudaGenerateRays(const Rect& region, const unsigned short samples, const Camera& camera,
-	Ray* rays, HitPoint* hit)
+__host__ void cudaGenerateRays(const Rect& region, const unsigned short sampleID, const unsigned short samples, 
+	const Camera& camera, Ray* rays, HitPoint* hit)
 {
 	uint2 size = make_uint2(region.right - region.left + 1, region.top - region.bottom + 1);
 
@@ -88,8 +82,11 @@ __host__ void cudaGenerateRays(const Rect& region, const unsigned short samples,
 
 	if(samples == 1)
 		cudaGenerateRaysKernel<<<gridSize, blockSize>>>(size, camera, rays, hit);
-	else
-		cudaGenerateRaysKernelMultisample<<<gridSize, blockSize>>>(size, samples, camera, rays, hit);
+	else {
+		const short swidth  = (short)sqrtf(samples);
+		const short2 sample = make_short2(sampleID % swidth, sampleID / swidth);
+		cudaGenerateRaysKernelMultisample<<<gridSize, blockSize>>>(size, sample, swidth, camera, rays, hit);
+	}
 }
 
 __global__ static void cudaTransformKernel(const Geometry source, Geometry dest, const Transform* transforms, const unsigned int objectCount)
@@ -195,7 +192,7 @@ __host__ void cudaSetupRNG(RNG* state, const size_t count, const unsigned int se
 	cudaSetupRNGKernel<<<gridSize, blockSize>>>(state, count, seed);
 }
 
-__global__ static void cudaDrawPixelsKernel(const Dim size, const Rect region, const unsigned short samples,
+__global__ static void cudaDrawPixelsKernel(const Dim size, const Rect region, const float weight,
 	const HitPoint* hit, float4* pixels)
 {
 	const unsigned int x = region.left   + blockDim.x * blockIdx.x + threadIdx.x;
@@ -203,31 +200,26 @@ __global__ static void cudaDrawPixelsKernel(const Dim size, const Rect region, c
 
 	if(x > region.right || y > region.top)
 		return;
-	
-	const float weight = 1.0f / samples;
+	const unsigned int rayID = size.width * y + x;
 
-	const unsigned int pixelID = size.width * y + x;
-	const unsigned int rayID   = samples * pixelID;
+	const HitPoint& hp = hit[rayID];
+	if(hp.triangleID != -1) {
+		float4 value = pixels[rayID];
+		value.x += hp.color.x * weight;
+		value.y += hp.color.y * weight;
+		value.z += hp.color.z * weight;
+		value.w += weight;
 
-	float4 value = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
-	for(unsigned short i=0; i<samples; i++) {
-		const HitPoint& hp = hit[rayID + i];
-		if(hp.triangleID != -1) {
-			value.x += hp.color.x * weight;
-			value.y += hp.color.y * weight;
-			value.z += hp.color.z * weight;
-			value.w += weight;
-		}
+		pixels[rayID] = value;
 	}
-	pixels[pixelID] = value;
 }
 
-__host__ void cudaDrawPixels(const Dim& size, const Rect& region, const unsigned short samples,
+__host__ void cudaDrawPixels(const Dim& size, const Rect& region, const float weight,
 	const HitPoint* hit, void* pixels)
 {
 	uint2 pcount = make_uint2(region.right - region.left + 1, region.top - region.bottom + 1);
 
 	dim3 blockSize(32, 16);
 	dim3 gridSize = make_grid(blockSize, dim3(pcount.x, pcount.y));
-	cudaDrawPixelsKernel<<<gridSize, blockSize>>>(size, region, samples, hit, (float4*)pixels);
+	cudaDrawPixelsKernel<<<gridSize, blockSize>>>(size, region, weight, hit, (float4*)pixels);
 }
