@@ -288,6 +288,26 @@ __host__ static void sortTriangles(const unsigned int count,
 	thrust::gather(permutation.begin(), permutation.end(), tempi.begin(), ptrNodes);
 }
 
+__host__ static void computeBounds(Geometry& geometry)
+{
+	float buffer[2*Geometry::TriangleSize];
+	float bmin[3], bmax[3];
+
+	cudaMemcpy(buffer, geometry.vertices, 2*Geometry::TriangleSize, cudaMemcpyDeviceToHost);
+	for(int i=0; i<3; i++)
+		bmin[i] = fminf(fminf(buffer[0+3*i], buffer[0+3*i+1]), buffer[0+3*i+2]);
+	for(int i=0; i<3; i++)
+		bmax[i] = fmaxf(fmaxf(buffer[9+3*i], buffer[9+3*i+1]), buffer[9+3*i+2]);
+
+	geometry.boundsMin.x = fminf(bmin[0], bmax[0]);
+	geometry.boundsMin.y = fminf(bmin[1], bmax[1]);
+	geometry.boundsMin.z = fminf(bmin[2], bmax[2]);
+
+	geometry.boundsMax.x = fmaxf(bmin[0], bmax[0]);
+	geometry.boundsMax.y = fmaxf(bmin[1], bmax[1]);
+	geometry.boundsMax.z = fmaxf(bmin[2], bmax[2]);
+}
+
 __host__ bool cudaRebuildNMH(Geometry& geometry)
 {
 	const size_t numLevels = log2i(geometry.count / 2) + 1;
@@ -417,6 +437,9 @@ __host__ bool cudaRebuildNMH(Geometry& geometry)
 	gridSize  = make_grid(blockSize, dim3(geometry.count));
 	applyIndices<<<gridSize, blockSize>>>(geometry, result, indices);
 	cudaFree(indices);
+
+	// Compute geometry bounds
+	computeBounds(result);
 
 	geometry.free();
 	geometry = result;

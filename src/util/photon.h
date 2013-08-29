@@ -13,14 +13,20 @@ class Photon
 {
 public:
 	__host__ __device__
-	Photon(const float3& p, const float3& d, const float3& pwr) : pos(p), dir(d), power(pwr) { }
+	Photon() : weight(1.0f) { }
+	
+	__host__ __device__
+	Photon(const float3& p, const float3& d, const float3& e)
+		: pos(p), wi(d), energy(e), weight(1.0f) { }
 
 	__host__ __device__
-	Photon(const Ray& ray, const float3& pwr) : pos(ray.pos), dir(ray.dir), power(pwr) { }
+	Photon(const Ray& ray, const float3& e)
+		: pos(ray.pos), wi(ray.dir), energy(e), weight(1.0f) { }
 
 	float3 pos;
-	float3 dir;
-	float3 power;
+	float3 wi;
+	float3 energy;
+	float  weight;
 };
 
 } // Aurora

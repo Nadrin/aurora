@@ -19,6 +19,24 @@ inline __device__ float sampleHemispherePdf()
 	return 0.5f * InvPi;
 }
 
+// Sampling: Uniform unit sphere
+inline __device__ float3 sampleSphere(const float u1, const float u2)
+{
+	const float z   = 1.0f - 2.0f * u1;
+	const float phi = 2.0f * Pi * u2;
+	const float r   = sqrtf(fmaxf(0.0f, 1.0f - z*z));
+
+	return make_float3(
+		r * cosf(phi),
+		r * sinf(phi),
+		z);
+}
+
+inline __device__ float sampleSpherePdf()
+{
+	return 0.25f * InvPi;
+}
+
 // Sampling: Uniform unit disk
 inline __device__ float2 sampleDisk(const float u1, const float u2)
 {
@@ -76,6 +94,31 @@ inline __device__ void sampleTriangle(const float u1, const float u2, float& u, 
 	v = u2 * sqrtu1;
 }
 
+// Sampling: 1D discrete CDF
+inline __device__ unsigned int sampleDiscreteCDF(const float u, const unsigned int n, const float* cdf)
+{
+	if(n <= 1) return 0;
+
+	int imin = 0;
+	int imax = n-1;
+	float distmin, distmax;
+
+	do {
+		const int imid = (imin + imax) / 2;
+		distmin = fabsf(cdf[imin] - u);
+		distmax = fabsf(cdf[imax] - u);
+
+		if(distmin < distmax) imax  = imid;
+		else imin  = imid;
+	} while((imax - imin) > 1);
+
+	distmin = fabsf(cdf[imin] - u);
+	distmax = fabsf(cdf[imax] - u);
+
+	if(distmin < distmax) return imin;
+	else return imax;
+}
+
 // Sampling: 1D discrete poly light array
 inline __device__ unsigned int sampleEmitters(const float u, const unsigned int numEmitters, const Emitter* emitters)
 {
@@ -99,6 +142,13 @@ inline __device__ unsigned int sampleEmitters(const float u, const unsigned int 
 
 	if(distmin < distmax) return imin;
 	else return imax;
+}
+
+// Sampling: Uniform rectangle
+inline __device__ float3 sampleRectangle(const float3& e1, const float3& e2,
+	const float u1, const float u2)
+{
+	return (e1 * u1) + (e2 * u2);
 }
 
 // Monte Carlo heuristics

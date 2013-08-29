@@ -50,6 +50,7 @@ void cudaRaytraceMonteCarlo(const Aurora::Geometry& geometry, const Aurora::Shad
 
 // Photon Mapping
 unsigned int cudaCreateEmitters(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, Aurora::Emitter** emitters);
+unsigned int cudaCreateLightsCDF(const Aurora::Geometry& geometry, const Aurora::LightsArray& lights, float** cdf);
 
 void cudaRaycastPrimary(const Aurora::PhotonMapperParams& params, const Aurora::Geometry& geometry,
 	Aurora::Ray* rays, Aurora::HitPoint* hitpoints);

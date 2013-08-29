@@ -7,6 +7,7 @@
 
 #include <util/array.h>
 #include <util/ray.h>
+#include <util/photon.h>
 
 namespace Aurora {
 
@@ -35,8 +36,10 @@ public:
 	__device__ float3 L(const float3& wi) const;
 	__device__ float3 sampleL(RNG* rng, Ray& ray, float& pdf) const;
 	__device__ bool   visible(const Geometry& geometry, const Ray& ray) const;
+	__device__ Photon emitPhoton(RNG* rng, const Geometry& geometry) const;
 
 	__device__ float  pdf(const Ray& ray) const;
+	__device__ float  power(const Geometry& geometry) const;
 	__device__ bool   isDeltaLight() const;
 
 };

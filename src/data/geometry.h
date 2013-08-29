@@ -27,6 +27,9 @@ public:
 	float* tangents;
 	float* bitangents;
 
+	float3 boundsMin;
+	float3 boundsMax;
+
 	unsigned int count;
 	GeometryAllocMode mode;
 protected:

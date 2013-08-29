@@ -207,5 +207,8 @@
     <CudaCompile Include="..\..\src\kernels\emitter.cu">
       <Filter>Source Root\kernels</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\src\kernels\light.cu">
+      <Filter>Source Root\kernels</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

@@ -41,7 +41,21 @@ __host__ void cudaRaycastPrimary(const PhotonMapperParams& params, const Geometr
 	cudaRaycastPrimaryKernel<<<gridSize, blockSize>>>(geometry, params.numHitPoints, rays, hitpoints);
 }
 
-__global__ static void cudaGeneratePhotons(RNG* grng, const Geometry geometry,
+__global__ static void cudaGeneratePhotonsFromLights(RNG* grng, const Geometry geometry,
+	const unsigned int numLights, const Light* lights, const float* lightCDF,
+	const unsigned int numPhotons, Photon* photons)
+{
+	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	if(threadId >= numPhotons)
+		return;
+
+	RNG rng = grng[threadId];
+
+	const unsigned int lightId = sampleDiscreteCDF(curand_uniform(&rng), numLights, lightCDF);
+	photons[threadId] = lights[lightId].emitPhoton(&rng, geometry);
+}
+
+__global__ static void cudaGeneratePhotonsFromEmitters(RNG* grng, const Geometry geometry,
 	const unsigned int numEmitters, const Emitter* emitters,
 	const unsigned int numPhotons, Photon* photons)
 {
@@ -59,9 +73,50 @@ __global__ static void cudaGeneratePhotons(RNG* grng, const Geometry geometry,
 	const float3 P = getPosition(geometry, triangleID, u, v);
 	const float3 N = getNormal(geometry, triangleID, u, v);
 
-	photons[threadId].pos   = P;
-	photons[threadId].dir   = N;
-	photons[threadId].power = emitters[emIndex].power;
+	photons[threadId].pos    = P;
+	photons[threadId].wi     = N;
+	photons[threadId].energy = emitters[emIndex].power;
+}
+
+__global__ static void cudaTracePhotons(RNG* grng, const Geometry geometry, const Shader* shaders,
+	const unsigned int numPhotons, const unsigned short maxDepth, Photon* photons)
+{
+	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	if(threadId >= numPhotons)
+		return;
+
+	RNG rng       = grng[threadId];
+	Photon photon = photons[threadId];
+
+	HitPoint hp;
+	unsigned short depth=0;
+
+	while(true) {
+		Ray ray(photon.pos, photon.wi);
+		ray.offset();
+
+		if(!intersect(geometry, ray, hp)) {
+			photons[threadId].weight = 0.0f;
+			return;
+		}
+
+		const Shader& shader = shaders[getSafeID(geometry.shaders[hp.triangleID])];
+		const BSDF&   bsdf   = shader.getBSDF(geometry, hp.triangleID, hp.u, hp.v);
+
+		float3 wo;
+		float pdf;
+		const float3 Kd = bsdf.samplef(&rng, photon.wi, wo, pdf);
+		const float Pd  = luminosity(Kd * photon.energy) / luminosity(photon.energy);
+
+		photon.energy = photon.energy * Kd;
+		photon.pos    = ray.point();
+
+		if(curand_uniform(&rng) > Pd || ++depth == maxDepth)
+			break;
+		photon.wi = wo;
+	}
+
+	photons[threadId] = photon;
 }
 
 __global__ static void cudaDebugPhotons(const unsigned int numHitPoints, HitPoint* hitpoints,
@@ -76,40 +131,36 @@ __global__ static void cudaDebugPhotons(const unsigned int numHitPoints, HitPoin
 	const float3 P = hitpoints[threadId].position;
 	for(unsigned int i=0; i<numPhotons; i++) {
 		if(distance(photons[i].pos, P) < 0.1f) {
-			hitpoints[threadId].color = make_float3(1.0f, 1.0f, 1.0f);
+			//hitpoints[threadId].color = photons[i].energy * photons[i].weight;
+			if(photons[i].weight > 0.0f)
+				hitpoints[threadId].color = make_float3(1.0f, 1.0f, 1.0f);
 			break;
 		}
 	}
 }
 
-inline __device__ float3 estimateDirectRadianceDelta(const PhotonMapperParams& params,
-	const Geometry& geometry, const Shader* shaders,
-	const Light& light, const HitPoint& hp)
+inline __device__ float3 estimateDirectRadianceDelta(
+	const PhotonMapperParams& params, const Geometry& geometry,
+	const Light& light, const Shader& shader, const BSDF& bsdf, const HitPoint& hp)
 {
-	const Shader& shader = shaders[getSafeID(geometry.shaders[hp.triangleID])];
-	const BSDF&   bsdf   = shader.getBSDF(geometry, hp.triangleID, hp.u, hp.v);
-
 	Ray wi(hp.position);
 
 	float pdf;
-	const float3 Le = shader.emission * shader.emissionColor;
 	const float3 Li = light.sampleL(NULL, wi, pdf);
 	wi.offset();
 
 	if(pdf > 0.0f && !zero(Li)) {
 		const float3 f = bsdf.f(hp.wo, wi.dir);
 		if(!zero(f) && light.visible(geometry, wi))
-			return Le + f * Li * fmaxf(0.0f, dot(wi.dir, bsdf.N));
+			return f * Li * fmaxf(0.0f, dot(wi.dir, bsdf.N));
 	}
-	return Le;
+	return make_float3(0.0f);
 }
 
-inline __device__ float3 estimateDirectRadiance(const PhotonMapperParams& params,
-	RNG* rng, const Geometry& geometry, const Shader* shaders,
-	const Light& light, const HitPoint& hp)
+inline __device__ float3 estimateDirectRadiance(
+	const PhotonMapperParams& params, RNG* rng, const Geometry& geometry,
+	const Light& light, const Shader& shader, const BSDF& bsdf, const HitPoint& hp)
 {
-	const Shader& shader = shaders[getSafeID(geometry.shaders[hp.triangleID])];
-	const BSDF&   bsdf   = shader.getBSDF(geometry, hp.triangleID, hp.u, hp.v);
 
 	Ray wi;
 	float3 Li, f;
@@ -170,13 +221,16 @@ __global__ static void cudaRenderDirect(const PhotonMapperParams params, RNG* gr
 	RNG rng      = grng[threadId];
 	HitPoint& hp = hitpoints[threadId];
 
-	float3 Li = make_float3(0.0f);
+	const Shader& shader = shaders[getSafeID(geometry.shaders[hp.triangleID])];
+	const BSDF&   bsdf   = shader.getBSDF(geometry, hp.triangleID, hp.u, hp.v);
+
+	float3 Li = shader.emissionColor;
 	for(unsigned int i=0; i<params.numLights; i++) {
 		const Light& light = lights[i];
 		if(light.isDeltaLight())
-			Li = Li + estimateDirectRadianceDelta(params, geometry, shaders, light, hp);
+			Li = Li + estimateDirectRadianceDelta(params, geometry, light, shader, bsdf, hp);
 		else
-			Li = Li + estimateDirectRadiance(params, &rng, geometry, shaders, light, hp);
+			Li = Li + estimateDirectRadiance(params, &rng, geometry, light, shader, bsdf, hp);
 	}
 
 	hp.color = Li;
@@ -192,8 +246,13 @@ __host__ void cudaPhotonTrace(const PhotonMapperParams& params, RNG* rng,
 	blockSize = dim3(256);
 	gridSize  = make_grid(blockSize, dim3(params.numPhotons));
 
-	//cudaGeneratePhotons<<<gridSize, blockSize>>>(rng, geometry, 
-	//	params.numEmitters, emitters, params.numPhotons, photons);
+	if(params.numLights > 0) {
+		cudaGeneratePhotonsFromLights<<<gridSize, blockSize>>>(
+			rng, geometry, params.numLights, lights.items, params.lightCDF, params.numPhotons, photons);
+	}
+
+	//cudaTracePhotons<<<gridSize, blockSize>>>(rng, geometry, shaders.items,
+	//	params.numPhotons, params.maxPhotonDepth, photons);
 
 	blockSize = dim3(64);
 	gridSize  = make_grid(blockSize, dim3(params.numHitPoints));

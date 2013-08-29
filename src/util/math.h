@@ -224,6 +224,10 @@ inline __host__ __device__ float3 cross(const float3& a, const float3& b)
 inline __host__ __device__ float3 reflect(const float3& i, const float3& n)
 { return i - 2.0f * n * dot(n, i); }
 
+// Compute RGB color luminosity
+inline __host__ __device__ float luminosity(const float3& color)
+{ return 0.2126f * color.x + 0.7152f * color.y + 0.0722f * color.z; }
+
 // Integer log2
 inline __host__ __device__ unsigned int log2i(unsigned int x)
 {

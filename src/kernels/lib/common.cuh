@@ -57,6 +57,17 @@ inline __device__ void getBasisVectors(const Geometry& geometry, const unsigned 
 	T = normalize(bclerp(buffer.v1, buffer.v2, buffer.v3, u, v));
 }
 
+inline __device__ void getBoundingSphere(const Geometry& geometry, float3& center, float& radius)
+{
+	center = 0.5f * geometry.boundsMin + 0.5f * geometry.boundsMax;
+	radius = distance(center, geometry.boundsMax);
+}
+
+inline __device__ float getBoundingSphereRadius(const Geometry& geometry)
+{
+	return 0.5f * distance(geometry.boundsMin, geometry.boundsMax);
+}
+
 inline __device__ float3 worldToLocal(const float3& v, const float3& N, const float3& S, const float3& T)
 {
 	return make_float3(

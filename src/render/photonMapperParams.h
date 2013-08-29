@@ -14,6 +14,11 @@ struct PhotonMapperParams
 	unsigned int numLights;
 	unsigned int numHitPoints;
 	unsigned int numEmitterSamples;
+
+	unsigned short maxPhotonDepth;
+	unsigned short maxRayDepth;
+
+	float* lightCDF;
 };
 
 } // Aurora

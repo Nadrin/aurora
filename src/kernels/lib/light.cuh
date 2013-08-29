@@ -32,10 +32,9 @@ inline __device__ float3 Light::sampleL(RNG* rng, Ray& ray, float& pdf) const
 		return color * intensity;
 	case AreaLight:
 		{
-			const float u1 = curand_uniform(rng);
-			const float u2 = curand_uniform(rng);
-			const float3 P = position + (e1 * u1) + (e2 * u2);
-			ray.dir        = P - ray.pos;
+			const float3 P = position 
+				+ sampleRectangle(e1, e2, curand_uniform(rng), curand_uniform(rng));
+			ray.dir = P - ray.pos;
 		}
 		ray.t   = length(ray.dir);
 		ray.dir = ray.dir / ray.t;
@@ -49,7 +48,7 @@ inline __device__ bool Light::visible(const Geometry& geometry, const Ray& ray) 
 	return !intersectAny(geometry, ray);
 }
 
-inline __device__ float  Light::pdf(const Ray& ray) const
+inline __device__ float Light::pdf(const Ray& ray) const
 {
 	switch(type) {
 	case PointLight:
@@ -58,4 +57,40 @@ inline __device__ float  Light::pdf(const Ray& ray) const
 	case AreaLight:
 		return 1.0f / (fmaxf(0.0f, dot(direction, -ray.dir)) * area);
 	}
+}
+
+inline __device__ float Light::power(const Geometry& geometry) const
+{
+	switch(type) {
+	case PointLight:
+		return 4.0f * Pi * luminosity(color) * intensity;
+	case DirectionalLight:
+		{
+			const float R = getBoundingSphereRadius(geometry);
+			return luminosity(color) * intensity * Pi * R * R;
+		}
+	case AreaLight:
+		return luminosity(color) * intensity * area * Pi;
+	}
+}
+
+inline __device__ Photon Light::emitPhoton(RNG* rng, const Geometry& geometry) const
+{
+	Photon p;
+	switch(type) {
+	case PointLight:
+		p.pos    = position;
+		p.wi     = sampleSphere(curand_uniform(rng), curand_uniform(rng));
+		p.energy = color * intensity;
+		break;
+	case DirectionalLight:
+		// TODO: Implement
+		break;
+	case AreaLight:
+		p.pos	 = position + sampleRectangle(e1, e2, curand_uniform(rng), curand_uniform(rng));
+		p.wi	 = direction;
+		p.energy = color * intensity;
+		break;
+	}
+	return p;
 }
