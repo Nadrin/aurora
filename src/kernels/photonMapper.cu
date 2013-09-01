@@ -15,6 +15,7 @@ using namespace Aurora;
 #include <kernels/lib/shader.cuh>
 #include <kernels/lib/light.cuh>
 #include <kernels/lib/emitter.cuh>
+#include <kernels/lib/radiance.cuh>
 
 __global__ static void cudaRaycastPrimaryKernel(const Geometry geometry,
 	const unsigned int numHitPoints, const Ray* rays, HitPoint* hitpoints)
@@ -111,8 +112,10 @@ __global__ static void cudaTracePhotons(RNG* grng, const Geometry geometry, cons
 		photon.energy = photon.energy * Kd;
 		photon.pos    = ray.point();
 
-		if(curand_uniform(&rng) > Pd || ++depth == maxDepth)
-			break;
+		//if(depth++ > 0) {
+			if(curand_uniform(&rng) > Pd || depth == maxDepth)
+				break;
+		//}
 		photon.wi = wo;
 	}
 
@@ -120,93 +123,26 @@ __global__ static void cudaTracePhotons(RNG* grng, const Geometry geometry, cons
 }
 
 __global__ static void cudaDebugPhotons(const unsigned int numHitPoints, HitPoint* hitpoints,
-	const unsigned int numPhotons, const Photon* photons)
+	const Geometry geometry, const unsigned int numPhotons, const Photon* photons)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= numHitPoints)
 		return;
 
-	hitpoints[threadId].color = make_float3(0.5f, 0.5f, 0.5f);
+	HitPoint& hp = hitpoints[threadId];
+	if(hp.triangleID == -1)
+		return;
 
-	const float3 P = hitpoints[threadId].position;
+	const float3 P = hp.position;
+	//const float3 N = getNormal(geometry, hp.triangleID, hp.u, hp.v);
 	for(unsigned int i=0; i<numPhotons; i++) {
-		if(distance(photons[i].pos, P) < 0.1f) {
-			//hitpoints[threadId].color = photons[i].energy * photons[i].weight;
+		const float d = distance(photons[i].pos, P);
+		if(d < 0.1f) {
+			const float nd = 1.0f - d / 0.1f;
 			if(photons[i].weight > 0.0f)
-				hitpoints[threadId].color = make_float3(1.0f, 1.0f, 1.0f);
-			break;
+				hp.color = hp.color + nd * photons[i].energy * photons[i].weight;
 		}
 	}
-}
-
-inline __device__ float3 estimateDirectRadianceDelta(
-	const PhotonMapperParams& params, const Geometry& geometry,
-	const Light& light, const Shader& shader, const BSDF& bsdf, const HitPoint& hp)
-{
-	Ray wi(hp.position);
-
-	float pdf;
-	const float3 Li = light.sampleL(NULL, wi, pdf);
-	wi.offset();
-
-	if(pdf > 0.0f && !zero(Li)) {
-		const float3 f = bsdf.f(hp.wo, wi.dir);
-		if(!zero(f) && light.visible(geometry, wi))
-			return f * Li * fmaxf(0.0f, dot(wi.dir, bsdf.N));
-	}
-	return make_float3(0.0f);
-}
-
-inline __device__ float3 estimateDirectRadiance(
-	const PhotonMapperParams& params, RNG* rng, const Geometry& geometry,
-	const Light& light, const Shader& shader, const BSDF& bsdf, const HitPoint& hp)
-{
-
-	Ray wi;
-	float3 Li, f;
-	float lightPdf, bsdfPdf, weight;
-
-	float3 L = make_float3(0.0f);
-	for(unsigned int i=0; i<light.samples; i++) {
-		float3 Ls = make_float3(0.0f);
-
-		// Sample light
-		wi = Ray(hp.position);
-		Li = light.sampleL(rng, wi, lightPdf);
-		wi.offset();
-
-		if(lightPdf > 0.0f && !zero(Li)) {
-			float3 f = bsdf.f(hp.wo, wi.dir);
-			if(!zero(f) && light.visible(geometry, wi)) {
-				bsdfPdf = bsdf.pdf(hp.wo, wi.dir);
-				weight  = powerHeuristic(1, lightPdf, 1, bsdfPdf);
-				Ls = Ls + f * Li * (fmaxf(0.0f, dot(wi.dir, bsdf.N)) * weight / lightPdf);
-			}
-		}
-
-		// Sample BSDF
-		wi = Ray(hp.position);
-		f  = bsdf.samplef(rng, hp.wo, wi.dir, bsdfPdf);
-		wi.offset();
-
-		if(bsdfPdf > 0.0f && !zero(f)) {
-			lightPdf = light.pdf(wi);
-			weight   = powerHeuristic(1, bsdfPdf, 1, lightPdf);
-
-			wi.t = Infinity;
-			if(light.visible(geometry, wi)) {
-				Li = light.L(-wi.dir);
-				Ls = Ls + f * Li * (fmaxf(0.0f, dot(wi.dir, bsdf.N)) * weight / bsdfPdf);
-			}
-		}
-
-		L = L + Ls;
-	}
-
-	return make_float3(
-		L.x / light.samples,
-		L.y / light.samples,
-		L.z / light.samples);
 }
 
 __global__ static void cudaRenderDirect(const PhotonMapperParams params, RNG* grng, 
@@ -228,9 +164,9 @@ __global__ static void cudaRenderDirect(const PhotonMapperParams params, RNG* gr
 	for(unsigned int i=0; i<params.numLights; i++) {
 		const Light& light = lights[i];
 		if(light.isDeltaLight())
-			Li = Li + estimateDirectRadianceDelta(params, geometry, light, shader, bsdf, hp);
+			Li = Li + estimateDirectRadianceDelta(geometry, light, shader, bsdf, hp);
 		else
-			Li = Li + estimateDirectRadiance(params, &rng, geometry, light, shader, bsdf, hp);
+			Li = Li + estimateDirectRadiance(&rng, geometry, light, shader, bsdf, hp);
 	}
 
 	hp.color = Li;
@@ -246,10 +182,10 @@ __host__ void cudaPhotonTrace(const PhotonMapperParams& params, RNG* rng,
 	blockSize = dim3(256);
 	gridSize  = make_grid(blockSize, dim3(params.numPhotons));
 
-	if(params.numLights > 0) {
+	/*if(params.numLights > 0) {
 		cudaGeneratePhotonsFromLights<<<gridSize, blockSize>>>(
 			rng, geometry, params.numLights, lights.items, params.lightCDF, params.numPhotons, photons);
-	}
+	}*/
 
 	//cudaTracePhotons<<<gridSize, blockSize>>>(rng, geometry, shaders.items,
 	//	params.numPhotons, params.maxPhotonDepth, photons);
@@ -259,5 +195,5 @@ __host__ void cudaPhotonTrace(const PhotonMapperParams& params, RNG* rng,
 	cudaRenderDirect<<<gridSize, blockSize>>>(params, rng, geometry, shaders.items, lights.items, hitpoints);
 
 	//gridSize = make_grid(blockSize, dim3(params.numHitPoints));
-	//cudaDebugPhotons<<<gridSize, blockSize>>>(params.numHitPoints, hitpoints, params.numPhotons, photons);
+	//cudaDebugPhotons<<<gridSize, blockSize>>>(params.numHitPoints, hitpoints, geometry, params.numPhotons, photons);
 }

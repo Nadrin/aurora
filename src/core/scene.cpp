@@ -248,9 +248,11 @@ MStatus Scene::updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, O
 		const MObject node = nodes[i];
 		const MFnLambertShader dagLambertShader(node);
 
-		buffer[i].diffuseColor  = make_float3(dagLambertShader.color());
-		buffer[i].emissionColor = make_float3(dagLambertShader.incandescence());
-		buffer[i].diffuse       = dagLambertShader.diffuseCoeff();
+		buffer[i].diffuseColor    = make_float3(dagLambertShader.color());
+		buffer[i].emissionColor   = make_float3(dagLambertShader.incandescence());
+		buffer[i].diffuse         = dagLambertShader.diffuseCoeff();
+		buffer[i].translucence    = dagLambertShader.translucenceCoeff();
+		buffer[i].refractiveIndex = dagLambertShader.refractiveIndex();
 
 		float _unused;
 		dagLambertShader.incandescence().get(MColor::kHSV, _unused, _unused, buffer[i].emission);
@@ -261,18 +263,20 @@ MStatus Scene::updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, O
 		case MFn::kLambert:
 			{
 				buffer[i].type = Shader::LambertShader;
+				buffer[i].specularColor   = make_float3(0.0f);
+				buffer[i].reflectionColor = make_float3(0.0f);
+				buffer[i].reflectivity    = 0.0f;
+				buffer[i].exponent        = 0.0f;
 			}
 			break;
 		case MFn::kPhong:
 			{
 				MFnPhongShader dagPhongShader(node);
 				buffer[i].type = Shader::PhongShader;
-			}
-			break;
-		case MFn::kBlinn:
-			{
-				MFnBlinnShader dagBlinnShader(node);
-				buffer[i].type = Shader::BlinnShader;
+				buffer[i].specularColor   = make_float3(dagPhongShader.specularColor());
+				buffer[i].reflectionColor = make_float3(dagPhongShader.reflectedColor());
+				buffer[i].reflectivity    = dagPhongShader.reflectivity();
+				buffer[i].exponent        = dagPhongShader.cosPower();
 			}
 			break;
 		default:

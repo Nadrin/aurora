@@ -29,9 +29,11 @@ __global__ static void cudaGenerateRaysKernel(const uint2 size, const Camera cam
 	Ray& ray     = rays[ID];
 	HitPoint& hp = hit[ID];
 
-	ray.pos = camera.position;
-	ray.t   = Infinity;
-	ray.dir = normalize(
+	ray.pos    = camera.position;
+	ray.t      = Infinity;
+	ray.weight = 1.0f;
+	ray.eta    = 1.0f;
+	ray.dir    = normalize(
 		pixel.x * camera.right * camera.tanfov.x +
 		pixel.y * camera.up * camera.tanfov.y +
 		camera.forward);
@@ -61,9 +63,11 @@ __global__ static void cudaGenerateRaysKernelMultisample(const uint2 size,
 	Ray& ray     = rays[rayID];
 	HitPoint& hp = hit[rayID];
 		
-	ray.pos = camera.position;
-	ray.t   = Infinity;
-	ray.dir = normalize(
+	ray.pos    = camera.position;
+	ray.t      = Infinity;
+	ray.weight = 1.0f;
+	ray.eta    = 1.0f;
+	ray.dir    = normalize(
 		pixel.x * camera.right * camera.tanfov.x +
 		pixel.y * camera.up * camera.tanfov.y +
 		camera.forward);

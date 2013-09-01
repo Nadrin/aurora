@@ -18,16 +18,22 @@ public:
 	enum ShaderType {
 		LambertShader,
 		PhongShader,
-		BlinnShader,
 	};
 
 	ShaderType type;
 
 	float3	diffuseColor;
 	float3	emissionColor;
+	float3	specularColor;
+	float3  reflectionColor;
 
 	float	diffuse;
 	float	emission;
+	float	exponent;
+	float	reflectivity;
+	float	translucence;
+	float	refractiveIndex;
+
 
 	__device__ BSDF getBSDF(const Geometry& geometry, const unsigned int index,
 		const float u, const float v) const;

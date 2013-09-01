@@ -14,19 +14,19 @@ class Ray
 {
 public:
 	__host__ __device__
-	Ray() : t(Infinity)
+	Ray() : t(Infinity), weight(1.0f)
 	{ }
 
 	__host__ __device__
-	Ray(const float3& p) : pos(p), t(Infinity)
+	Ray(const float3& p) : pos(p), t(Infinity), weight(1.0f)
 	{ }
 	
 	__host__ __device__ 
-	Ray(const float3& p, const float3& d, const float t=Infinity) : pos(p), dir(d), t(t)
+	Ray(const float3& p, const float3& d, const float t=Infinity) : pos(p), dir(d), t(t), weight(1.0f)
 	{ }
 
 	__device__
-	Ray& offset(const float off=RayEpsilon);
+	Ray& offset(const float off=Epsilon);
 
 	__device__
 	bool intersect(const Primitive3& triangle, float& u, float& v, float& t) const;
@@ -40,6 +40,8 @@ public:
 	float3 pos;
 	float3 dir;
 	float t;
+	float weight;
+	float eta;
 };
 
 } // Aurora

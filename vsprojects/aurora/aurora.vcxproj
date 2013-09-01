@@ -22,9 +22,10 @@
     <ClCompile Include="..\..\src\render\debugPattern.cpp" />
     <ClCompile Include="..\..\src\render\monteCarloRaytracer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\render\photonMapper.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\render\photonMapper.cpp" />
     <ClCompile Include="..\..\src\render\raycaster.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -97,15 +98,19 @@
     <ClInclude Include="..\..\src\kernels\lib\emitter.cuh">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\radiance.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
     <None Include="..\..\src\maya\aurora.mel" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\kernels\light.cu" />
     <CudaCompile Include="..\..\src\kernels\monteCarloRaytracer.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\kernels\photonMapper.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\kernels\photonMapper.cu" />
     <CudaCompile Include="..\..\src\kernels\emitter.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </CudaCompile>

@@ -13,11 +13,14 @@ inline __device__ BSDF Shader::getBSDF(const Geometry& geometry, const unsigned 
 
 	switch(type) {
 	case Shader::LambertShader:
-		bsdf.type = BSDF::BSDF_Lambert;
-		bsdf.spectrum = diffuseColor * diffuse;
+		bsdf.type   = BSDF::BSDF_Lambert;
+		bsdf.color1 = diffuseColor * diffuse;
 		break;
 	case Shader::PhongShader:
-		bsdf.type = BSDF::BSDF_Phong;
+		bsdf.type     = BSDF::BSDF_Phong;
+		bsdf.color1   = diffuseColor * diffuse;
+		bsdf.color2   = specularColor;
+		bsdf.exponent = exponent;
 		break;
 	}
 	return bsdf;

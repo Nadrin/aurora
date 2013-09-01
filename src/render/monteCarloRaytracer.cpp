@@ -18,8 +18,7 @@ MonteCarloRaytracer::~MonteCarloRaytracer()
 MStatus MonteCarloRaytracer::createFrame(const unsigned int width, const unsigned int height,
 	const unsigned short samples, Scene* scene, MDagPath& camera)
 {
-	const unsigned int numPixels = width * height;
-	const unsigned int numRays   = width * height * samples;
+	const unsigned int numRays   = width * height;
 
 	if(gpu::cudaMalloc(&m_rays, sizeof(Ray) * numRays) != gpu::cudaSuccess)
 		return MS::kInsufficientMemory;
@@ -27,13 +26,13 @@ MStatus MonteCarloRaytracer::createFrame(const unsigned int width, const unsigne
 		gpu::cudaFree(m_rays);
 		return MS::kInsufficientMemory;
 	}
-	if(gpu::cudaMalloc(&m_pixels, sizeof(float4) * numPixels) != gpu::cudaSuccess) {
+	if(gpu::cudaMalloc(&m_pixels, sizeof(float4) * numRays) != gpu::cudaSuccess) {
 		gpu::cudaFree(m_rays);
 		gpu::cudaFree(m_hit);
 		return MS::kInsufficientMemory;
 	}
 
-	m_framebuffer = new RV_PIXEL[numPixels];
+	m_framebuffer = new RV_PIXEL[numRays];
 	if(m_framebuffer == NULL) {
 		gpu::cudaFree(m_rays);
 		gpu::cudaFree(m_hit);
@@ -42,11 +41,12 @@ MStatus MonteCarloRaytracer::createFrame(const unsigned int width, const unsigne
 	}
 
 	m_scene    = scene;
+	m_camera   = camera;
 	m_region   = Rect(0, width-1, 0, height-1);
 	m_size     = Dim(width, height, samples);
 
-	Renderer::generateRays(camera, m_size, m_region, m_rays, m_hit);
-	Renderer::setupRNG(&m_rng, width * height * samples, 666);
+	//Renderer::generateRays(camera, m_size, m_region, m_rays, m_hit);
+	Renderer::setupRNG(&m_rng, numRays, GetTickCount());
 	return MS::kSuccess;
 }
 
@@ -75,10 +75,16 @@ MStatus MonteCarloRaytracer::setRegion(const Rect& region)
 
 MStatus MonteCarloRaytracer::render(bool ipr)
 {
-	const unsigned int numRays = m_size.width * m_size.height * m_size.depth;
-	cudaRaytraceMonteCarlo(m_scene->geometry(), m_scene->shaders(), m_scene->lights(),
-		m_rng, numRays, m_rays, m_hit);
-	Renderer::drawPixels(m_size, m_region, m_hit, m_pixels);
+	const float weight = 1.0f / m_size.depth;
+	const unsigned int numRays = m_size.width * m_size.height;
+
+	Renderer::clearPixels(m_size, m_pixels);
+	for(unsigned short i=0; i<m_size.depth; i++) {
+		Renderer::generateRays(m_camera, m_size, m_region, i, m_rays, m_hit);
+		cudaRaytraceMonteCarlo(m_scene->geometry(), m_scene->shaders(), m_scene->lights(),
+			m_rng, numRays, m_rays, m_hit);
+		Renderer::drawPixels(m_size, m_region, m_hit, weight, m_pixels);
+	}
 	return MS::kSuccess;
 }
 

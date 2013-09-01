@@ -13,72 +13,94 @@ using namespace Aurora;
 #include <kernels/lib/bsdf.cuh>
 #include <kernels/lib/shader.cuh>
 #include <kernels/lib/light.cuh>
+#include <kernels/lib/radiance.cuh>
+#include <kernels/lib/stack.cuh>
 
-__global__ static void cudaRaytraceMonteCarloKernel(const Geometry geometry, const ShadersArray shaders, const LightsArray lights,
+#define MAX_DEPTH 8
+
+typedef Stack<Ray, MAX_DEPTH*2> RayStack;
+
+inline __device__ bool raytrace(RNG* rng, const Geometry& geometry,
+	const ShadersArray& shaders, const LightsArray& lights, RayStack& rs, HitPoint& hp, int& depth)
+{
+	Ray ray = rs.pop();
+	if(!intersect(geometry, ray, hp))
+		return;
+
+	hp.position = ray.point();
+	hp.wo       = -ray.dir;
+
+	const Shader& shader = shaders[getSafeID(geometry.shaders[hp.triangleID])];
+	const BSDF&   bsdf   = shader.getBSDF(geometry, hp.triangleID, hp.u, hp.v);
+
+	float3 Li = shader.emissionColor;
+	for(int i=0; i<lights.size; i++) {
+		const Light& light = lights[i];
+		if(light.isDeltaLight())
+			Li = Li + estimateDirectRadianceDelta(geometry, light, shader, bsdf, hp);
+		else
+			Li = Li + estimateDirectRadiance(rng, geometry, light, shader, bsdf, hp);
+	}
+
+	if(shader.reflectivity > 0.0f || shader.translucence > 0.0f)
+		depth++;
+
+	if(depth <= MAX_DEPTH && shader.reflectivity > 0.0f) {
+		Ray newray(hp.position, reflect(ray.dir, bsdf.N));
+		newray.weight = shader.reflectivity;
+		newray.eta    = ray.eta;
+		ray.weight   *= (1.0f - shader.reflectivity);
+
+		rs.push(newray);
+	}
+	if(depth <= MAX_DEPTH && shader.translucence > 0.0f) {
+		float3 rN  = bsdf.N;
+		float etai = ray.eta;
+		float etat = shader.refractiveIndex;
+
+		if(dot(rN, ray.dir) < 0.0f) {
+			rN   = -rN;
+			etai = shader.refractiveIndex;
+			etat = 1.0f;
+		}
+
+		float3 tdir;
+		if(refract(tdir, ray.dir, rN, etai, etat)) {
+			Ray newray(hp.position, tdir);
+			newray.weight = shader.translucence;
+			newray.eta    = etat;
+			ray.weight   *= (1.0f - shader.translucence);
+
+			rs.push(newray);
+		}
+	}
+
+	hp.color = hp.color + (Li * ray.weight);
+}
+
+__global__ static void cudaRaytraceKernel(const Geometry geometry, const ShadersArray shaders, const LightsArray lights,
 	RNG* grng, const unsigned int numRays, Ray* rays, HitPoint* hits)
 {
-	const unsigned int rayID = blockDim.x * blockIdx.x + threadIdx.x;
-	if(rayID >= numRays)
+	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+	if(threadId >= numRays)
 		return;
+	
+	RNG rng      = grng[threadId];
+	Ray& ray     = rays[threadId];
+	HitPoint& hp = hits[threadId];
 
-	RNG rng		  = grng[threadIdx.x];
-	Ray ray	      = rays[rayID];
-	HitPoint& hit = hits[rayID];
+	RayStack rs;
+	rs.push(ray);
 
-	if(!intersect(geometry, ray, hit))
-		return;
-
-	const float3 P = ray.point();
-
-	const unsigned int shaderID = getSafeID(geometry.shaders[hit.triangleID]);
-	const Shader shader = shaders[shaderID];
-	const BSDF   bsdf   = shader.getBSDF(geometry, hit.triangleID, hit.u, hit.v);
-	const float3 Wo     = -ray.dir;
-
-	hit.color = make_float3(0.0f);
-	for(unsigned int l=0; l<lights.size; l++) {
-		const Light& light = lights[l];
-		
-		float3 Li = make_float3(0.0f);
-		for(unsigned int s=0; s<lights[l].samples; s++) {			
-			float3 Ls = make_float3(0.0f);
-			
-			float3 Wi, Le, f;
-			float  Lpdf, BSDFpdf, Ldistance, weight;
-
-			// Sample light source
-			Le = light.sampleL(&rng, P, Wi, Ldistance, Lpdf);
-			if(Lpdf > 0.0f && !zero(Le)) {
-				f = bsdf.f(Wo, Wi);
-
-				if(!zero(f) && !intersectAny(geometry, Ray(P, Wi, Ldistance).offset())) {
-					if(light.isDeltaLight()) { 
-						Ls = Ls + f * Le * fmaxf(0.0f, dot(bsdf.N, Wi)) / Lpdf;
-					}
-					else {
-						BSDFpdf = bsdf.pdf(Wo, Wi);
-						weight  = powerHeuristic(1, BSDFpdf, 1, Lpdf);
-						Ls = Ls + f * Le * fmaxf(0.0f, dot(bsdf.N, Wi)) * weight / Lpdf;
-					}
-				}
-			}
-
-			// Sample BSDF
-			if(!light.isDeltaLight()) {
-
-			}
-
-			Li = Li + Ls;
-		}
-		if(lights[l].samples > 0)
-			hit.color = hit.color + (Li / lights[l].samples);
-	}
+	int depth=0;
+	while(depth <= MAX_DEPTH && rs.size > 0)
+		raytrace(&rng, geometry, shaders, lights, rs, hp, depth);
 }
 
 __host__ void cudaRaytraceMonteCarlo(const Geometry& geometry, const ShadersArray& shaders, const LightsArray& lights,
 	RNG* rng, const unsigned int numRays, Ray* rays, HitPoint* hits)
 {
-	dim3 blockSize(256);
+	dim3 blockSize(64);
 	dim3 gridSize = make_grid(blockSize, dim3(numRays));
-	cudaRaytraceMonteCarloKernel<<<gridSize, blockSize>>>(geometry, shaders, lights, rng, numRays, rays, hits);
+	cudaRaytraceKernel<<<gridSize, blockSize>>>(geometry, shaders, lights, rng, numRays, rays, hits);
 }

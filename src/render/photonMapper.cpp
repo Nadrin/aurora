@@ -18,9 +18,9 @@ PhotonMapper::PhotonMapper() : m_pixels(NULL), m_rays(NULL), m_framebuffer(NULL)
 	m_params.numLights          = 0;
 	m_params.numHitPoints       = 0;
 
-	m_params.numPhotons         = 500;
+	m_params.numPhotons         = 5000;
 	m_params.numEmitterSamples  = 16;
-	m_params.maxPhotonDepth     = 4;
+	m_params.maxPhotonDepth     = 16;
 	m_params.maxRayDepth        = 4;
 
 	m_params.lightCDF = NULL;

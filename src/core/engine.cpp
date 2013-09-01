@@ -5,8 +5,8 @@
 
 #include <stdafx.h>
 #include <core/engine.h>
+#include <render/monteCarloRaytracer.h>
 #include <render/photonMapper.h>
-#include <render/raycaster.h>
 
 #include <maya/MGlobal.h>
 #include <maya/MRenderView.h>
@@ -49,7 +49,7 @@ MStatus Engine::initialialize(const int device)
 
 	m_deviceID  = deviceNumber;
 	m_scene     = new Scene();
-	m_renderer  = new PhotonMapper();
+	m_renderer  = new MonteCarloRaytracer();
 
 	gpu::cudaEventCreate(&m_eventUpdate[0]);
 	gpu::cudaEventCreate(&m_eventUpdate[1]);

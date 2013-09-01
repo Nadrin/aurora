@@ -14,7 +14,9 @@ inline __device__ float3 BSDF::lf(const float3& wo, const float3& wi) const
 {
 	switch(type) {
 	case BSDF_Lambert:
-		return spectrum * InvPi;
+		return color1 * InvPi;
+	case BSDF_Phong:
+		return color1 * InvPi;
 	}
 }
 
@@ -22,6 +24,8 @@ inline __device__ float  BSDF::lpdf(const float3& wo, const float3& wi) const
 {
 	switch(type) {
 	case BSDF_Lambert:
+		return sameHemisphere(wo, wi) ? absCosTheta(wi) * InvPi : 0.0f;
+	case BSDF_Phong:
 		return sameHemisphere(wo, wi) ? absCosTheta(wi) * InvPi : 0.0f;
 	}
 }

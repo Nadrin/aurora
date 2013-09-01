@@ -182,6 +182,9 @@
     <ClInclude Include="..\..\src\kernels\lib\emitter.cuh">
       <Filter>Source Root\kernels\lib</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kernels\lib\radiance.cuh">
+      <Filter>Source Root\kernels\lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\maya\aurora.mel">

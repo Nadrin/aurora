@@ -16,7 +16,6 @@ namespace Aurora {
 
 static const float __device__ Infinity   = 1000000.0f;
 static const float __device__ Epsilon    = 0.0000001f;
-static const float __device__ RayEpsilon = 0.0001f;
 static const float __device__ Pi         = 3.1415926536f;
 static const float __device__ TwoPi      = 6.2831853072f;
 static const float __device__ InvPi      = 0.3183098862f;
@@ -223,6 +222,20 @@ inline __host__ __device__ float3 cross(const float3& a, const float3& b)
 // Reflect
 inline __host__ __device__ float3 reflect(const float3& i, const float3& n)
 { return i - 2.0f * n * dot(n, i); }
+
+// Refract
+inline __host__ __device__ bool refract(float3& r, const float3& i, const float3& n,
+	const float eta1, const float eta2)
+{
+	const float eta  = eta1 / eta2;
+	const float cosi = dot(n, i);
+	const float sint = eta * eta * (1.0f - cosi * cosi);
+
+	if(sint > 1.0f)
+		return false;
+	r = eta * i - (eta + sqrtf(1.0f - sint)) * n;
+	return true;
+}
 
 // Compute RGB color luminosity
 inline __host__ __device__ float luminosity(const float3& color)

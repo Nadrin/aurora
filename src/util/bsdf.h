@@ -17,7 +17,9 @@ public:
 
 	BSDFType type;
 	float3	 N, S, T;
-	float3   spectrum;
+	float3   color1;
+	float3	 color2;
+	float	 exponent;
 
 	__device__ float3 f(const float3& wo, const float3& wi) const;
 	__device__ float  pdf(const float3& wo, const float3& wi) const;
