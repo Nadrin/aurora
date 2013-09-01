@@ -58,7 +58,7 @@ inline __device__ bool raytrace(RNG* rng, const Geometry& geometry,
 		float etai = ray.eta;
 		float etat = shader.refractiveIndex;
 
-		if(dot(rN, ray.dir) < 0.0f) {
+		if(dot(rN, hp.wo) < 0.0f) {
 			rN   = -rN;
 			etai = shader.refractiveIndex;
 			etat = 1.0f;
