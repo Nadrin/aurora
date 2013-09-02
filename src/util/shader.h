@@ -34,6 +34,7 @@ public:
 	float	translucence;
 	float	refractiveIndex;
 
+	unsigned int texture;
 
 	__device__ BSDF getBSDF(const Geometry& geometry, const unsigned int index,
 		const float u, const float v) const;

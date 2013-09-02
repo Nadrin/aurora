@@ -14,8 +14,8 @@ inline __device__ void Primitive2::readPoints(const float* v)
 inline __device__ void Primitive2::readValues(const float* v)
 {
 	v1.x = v[0]; v1.y = v[1];
-	v2.x = v[3]; v2.y = v[4];
-	v3.x = v[6]; v3.y = v[7];
+	v2.x = v[2]; v2.y = v[3];
+	v3.x = v[4]; v3.y = v[5];
 }
 
 inline __device__ void Primitive2::writePoints(float* v)
@@ -27,8 +27,8 @@ inline __device__ void Primitive2::writePoints(float* v)
 inline __device__ void Primitive2::writeValues(float* v)
 {
 	v[0] = v1.x; v[1] = v1.y;
-	v[3] = v2.x; v[4] = v2.y;
-	v[6] = v3.x; v[7] = v3.y;
+	v[2] = v2.x; v[3] = v2.y;
+	v[4] = v3.x; v[5] = v3.y;
 }
 
 inline __device__ float Primitive2::area() const

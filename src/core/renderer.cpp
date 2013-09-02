@@ -40,6 +40,11 @@ void Renderer::drawPixels(const Dim& size, const Rect& region, const HitPoint* h
 	cudaDrawPixels(size, region, weight, hit, pixels);
 }
 
+void Renderer::filterPixels(const Dim& size, const Rect& region, void** pixels)
+{
+	cudaFilterPixels(size, region, pixels);
+}
+
 bool Renderer::setupRNG(RNG** rng, const size_t count, const unsigned int seed)
 {
 	if(gpu::cudaMalloc(rng, count * sizeof(RNG)) != gpu::cudaSuccess)

@@ -4,6 +4,7 @@
  */
 
 #include <stdafx.h>
+#include <util/math.h>
 #include <data/texture.h>
 
 using namespace Aurora;
@@ -13,11 +14,28 @@ Texture::Texture() : width(0), height(0), pixels(NULL)
 
 bool Texture::load(const unsigned int w, const unsigned int h, const float* data)
 {
-	channelDesc = gpu::cudaCreateChannelDesc(8, 8, 8, 8, gpu::cudaChannelFormatKindFloat);
-	if(gpu::cudaMallocArray(&pixels, &channelDesc, w, h) != gpu::cudaSuccess)
+	float4* buffer;
+	float4* devbuffer;
+
+	if(gpu::cudaHostAlloc(&buffer, w*h*sizeof(float4),
+		cudaHostAllocMapped | cudaHostAllocWriteCombined) != gpu::cudaSuccess)
 		return false;
 
-	gpu::cudaMemcpyToArray(pixels, 0, 0, data, w*h*4*sizeof(float), gpu::cudaMemcpyHostToDevice);
+	channelDesc = gpu::cudaCreateChannelDesc(32, 32, 32, 32, gpu::cudaChannelFormatKindFloat);
+	if(gpu::cudaMallocArray(&pixels, &channelDesc, w, h) != gpu::cudaSuccess) {
+		gpu::cudaFreeHost(buffer);
+		return false;
+	}
+
+	const float* ptr = data;
+	for(unsigned int i=0; i<w*h; i++) {
+		buffer[i] = make_float4(ptr[0]/255.0f, ptr[1]/255.0f, ptr[2]/255.0f, ptr[3]);
+		ptr += 4;
+	}
+
+	gpu::cudaHostGetDevicePointer(&devbuffer, buffer, 0);
+	gpu::cudaMemcpyToArray(pixels, 0, 0, devbuffer, w*h*4*sizeof(float), gpu::cudaMemcpyDeviceToDevice);
+	gpu::cudaFreeHost(buffer);
 
 	width  = w;
 	height = h;

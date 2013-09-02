@@ -36,6 +36,7 @@ protected:
 
 	static void clearPixels(const Dim& size, void* pixels);
 	static void drawPixels(const Dim& size, const Rect& region, const HitPoint* hit, const float weight, void* pixels);
+	static void filterPixels(const Dim& size, const Rect& region, void** pixels);
 };
 
 } // Aurora

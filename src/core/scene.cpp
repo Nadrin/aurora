@@ -257,7 +257,7 @@ MStatus Scene::updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, O
 		float _unused;
 		dagLambertShader.incandescence().get(MColor::kHSV, _unused, _unused, buffer[i].emission);
 
-		//buffer[i].texture[Shader::ChannelColor] = getConnectedIndex(MFn::kFileTexture, MObjectHandle(node), "color", hTextures);
+		buffer[i].texture = getConnectedIndex(MFn::kFileTexture, MObjectHandle(node), "color", hTextures);
 		
 		switch(node.apiType()) {
 		case MFn::kLambert:
@@ -293,12 +293,29 @@ MStatus Scene::updateShaders(MObjectArray& nodes, const ObjectHash& hTextures, O
 
 MStatus Scene::updateTextures(MObjectArray& nodes, ObjectHash& hTextures)
 {
+	for(unsigned int i=0; i<m_textures.size; i++)
+		m_textures[i].free();
+
 	m_textures.resize(nodes.length());
 	if(m_textures.size == 0)
 		return MS::kSuccess;
 
 	for(unsigned int i=0; i<nodes.length(); i++) {
 		const MObject node = nodes[i];
+		
+		MImage image;
+		if(!image.readFromTextureNode(node, MImage::kFloat))
+			continue;
+		if(image.depth() != 16) {
+			std::cerr << "[Aurora] Warning: Unsupported texture depth: " << image.depth() << std::endl;
+			continue;
+		}
+
+		unsigned int w, h;
+		image.getSize(w, h);
+		if(!m_textures[i].load(w, h, image.floatPixels()))
+			continue;
+	
 		hTextures[MObjectHandle(node).hashCode()] = setID(i);
 	}
 	return MS::kSuccess;
@@ -434,6 +451,9 @@ MStatus Scene::update(UpdateType type)
 void Scene::free()
 {
 	m_geometry.free();
+	for(unsigned int i=0; i<m_textures.size; i++)
+		m_textures[i].free();
+
 	m_textures.resize(0);
 	m_shaders.resize(0);
 	m_lights.resize(0);

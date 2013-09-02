@@ -42,6 +42,14 @@ inline __device__ float3 getNormal(const Geometry& geometry, const unsigned int 
 	return normalize(bclerp(buffer.v1, buffer.v2, buffer.v3, u, v));
 }
 
+inline __device__ float2 getTexCoord(const Geometry& geometry, const unsigned int index,
+	const float u, const float v)
+{
+	Primitive2 buffer;
+	buffer.readValues(geometry.texcoords + index * Geometry::TriangleUVs);
+	return bclerp(buffer.v1, buffer.v2, buffer.v3, u, v);
+}
+
 inline __device__ void getBasisVectors(const Geometry& geometry, const unsigned int index,
 	const float u, const float v, float3& N, float3& S, float3& T)
 {

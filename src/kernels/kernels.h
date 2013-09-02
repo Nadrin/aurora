@@ -6,6 +6,7 @@
 #pragma once
 
 #include <data/geometry.h>
+#include <data/texture.h>
 
 #include <util/math.h>
 #include <util/ray.h>
@@ -38,6 +39,8 @@ void cudaSetupRNG(RNG* state, const size_t count, const unsigned int seed);
 void cudaDrawPixels(const Aurora::Dim& size, const Aurora::Rect& region, const float weight,
 	const Aurora::HitPoint* hit, void* pixels);
 
+void cudaFilterPixels(const Aurora::Dim& size, const Aurora::Rect& region, void** pixels);
+
 // NMH construction
 bool cudaRebuildNMH(Aurora::Geometry& geometry);
 
@@ -45,7 +48,8 @@ bool cudaRebuildNMH(Aurora::Geometry& geometry);
 void cudaRaycast(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, const Aurora::LightsArray& lights,
 	const unsigned int numRays, Aurora::Ray* rays, Aurora::HitPoint* hitpoints);
 
-void cudaRaytraceMonteCarlo(const Aurora::Geometry& geometry, const Aurora::ShadersArray& shaders, const Aurora::LightsArray& lights,
+void cudaRaytraceMonteCarlo(const Aurora::Geometry& geometry,
+	const Aurora::ShadersArray& shaders, const Aurora::TexturesArray& textures, const Aurora::LightsArray& lights,
 	RNG* rng, const unsigned int numRays, Aurora::Ray* rays, Aurora::HitPoint* hitpoints);
 
 // Photon Mapping

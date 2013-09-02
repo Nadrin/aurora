@@ -15,12 +15,12 @@ using namespace Aurora;
 #include <kernels/lib/light.cuh>
 #include <kernels/lib/radiance.cuh>
 #include <kernels/lib/stack.cuh>
+#include <kernels/lib/texunit.cuh>
 
 #define MAX_DEPTH 8
+typedef Stack<Ray, MAX_DEPTH+2> RayStack;
 
-typedef Stack<Ray, MAX_DEPTH*2> RayStack;
-
-inline __device__ bool raytrace(RNG* rng, const Geometry& geometry,
+inline __device__ void raytrace(RNG* rng, const Geometry& geometry,
 	const ShadersArray& shaders, const LightsArray& lights, RayStack& rs, HitPoint& hp, int& depth)
 {
 	Ray ray = rs.pop();
@@ -31,7 +31,12 @@ inline __device__ bool raytrace(RNG* rng, const Geometry& geometry,
 	hp.wo       = -ray.dir;
 
 	const Shader& shader = shaders[getSafeID(geometry.shaders[hp.triangleID])];
-	const BSDF&   bsdf   = shader.getBSDF(geometry, hp.triangleID, hp.u, hp.v);
+	BSDF bsdf = shader.getBSDF(geometry, hp.triangleID, hp.u, hp.v);
+	
+	if(shader.texture > 0) {
+		const float2 uv = getTexCoord(geometry, hp.triangleID, hp.u, hp.v);
+		bsdf.color1 = texfetch(getID(shader.texture), uv.x, uv.y) * shader.diffuse;
+	}
 
 	float3 Li = shader.emissionColor;
 	for(int i=0; i<lights.size; i++) {
@@ -97,10 +102,13 @@ __global__ static void cudaRaytraceKernel(const Geometry geometry, const Shaders
 		raytrace(&rng, geometry, shaders, lights, rs, hp, depth);
 }
 
-__host__ void cudaRaytraceMonteCarlo(const Geometry& geometry, const ShadersArray& shaders, const LightsArray& lights,
+__host__ void cudaRaytraceMonteCarlo(const Geometry& geometry,
+	const ShadersArray& shaders, const TexturesArray& textures, const LightsArray& lights,
 	RNG* rng, const unsigned int numRays, Ray* rays, HitPoint* hits)
 {
 	dim3 blockSize(64);
 	dim3 gridSize = make_grid(blockSize, dim3(numRays));
+
+	bindTextures(textures);
 	cudaRaytraceKernel<<<gridSize, blockSize>>>(geometry, shaders, lights, rng, numRays, rays, hits);
 }

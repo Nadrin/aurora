@@ -227,3 +227,43 @@ __host__ void cudaDrawPixels(const Dim& size, const Rect& region, const float we
 	dim3 gridSize = make_grid(blockSize, dim3(pcount.x, pcount.y));
 	cudaDrawPixelsKernel<<<gridSize, blockSize>>>(size, region, weight, hit, (float4*)pixels);
 }
+
+__global__ static void cudaFilterPixelsKernel(const Dim size, const Rect region, float4* in, float4* out)
+{
+	const int x = region.left   + blockDim.x * blockIdx.x + threadIdx.x;
+	const int y = region.bottom + blockDim.y * blockIdx.y + threadIdx.y;
+
+	if(x > region.right || y > region.top)
+		return;
+
+	const unsigned int p00 = size.width * max(y-1, int(region.bottom)) + max(x-1, int(region.left));
+	const unsigned int p01 = size.width * max(y-1, int(region.bottom)) + x;
+	const unsigned int p02 = size.width * max(y-1, int(region.bottom)) + min(x+1, int(region.right));
+	const unsigned int p10 = size.width * y + max(x-1, int(region.left));
+	const unsigned int p11 = size.width * y + x;
+	const unsigned int p12 = size.width * y + min(x+1, int(region.right));
+	const unsigned int p20 = size.width * min(y+1, int(region.bottom)) + max(x-1, int(region.left));
+	const unsigned int p21 = size.width * min(y+1, int(region.bottom)) + x;
+	const unsigned int p22 = size.width * min(y+1, int(region.bottom)) + min(x+1, int(region.right));
+
+	const float4 value =
+		in[p00] * 0.0625f + in[p01] * 0.125f + in[p02] * 0.0625f +
+		in[p10] * 0.125f  + in[p11] * 0.25f  + in[p12] * 0.125f  +
+		in[p20] * 0.0625f + in[p21] * 0.125f + in[p22] * 0.0625f; 
+	out[p11] = value;
+}
+
+__host__ void cudaFilterPixels(const Dim& size, const Rect& region, void** pixels)
+{
+	uint2 pcount = make_uint2(region.right - region.left + 1, region.top - region.bottom + 1);
+
+	float4* buffer;
+	cudaMalloc(&buffer, size.width * size.height * sizeof(float4));
+
+	dim3 blockSize(32, 16);
+	dim3 gridSize = make_grid(blockSize, dim3(pcount.x, pcount.y));
+	cudaFilterPixelsKernel<<<gridSize, blockSize>>>(size, region, (float4*)*pixels, buffer);
+	
+	cudaFree(*pixels);
+	*pixels = buffer;
+}

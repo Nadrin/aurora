@@ -81,10 +81,14 @@ MStatus MonteCarloRaytracer::render(bool ipr)
 	Renderer::clearPixels(m_size, m_pixels);
 	for(unsigned short i=0; i<m_size.depth; i++) {
 		Renderer::generateRays(m_camera, m_size, m_region, i, m_rays, m_hit);
-		cudaRaytraceMonteCarlo(m_scene->geometry(), m_scene->shaders(), m_scene->lights(),
+
+		cudaRaytraceMonteCarlo(m_scene->geometry(), 
+			m_scene->shaders(), m_scene->textures(), m_scene->lights(), 
 			m_rng, numRays, m_rays, m_hit);
+
 		Renderer::drawPixels(m_size, m_region, m_hit, weight, m_pixels);
 	}
+	//Renderer::filterPixels(m_size, m_region, (void**)&m_pixels);
 	return MS::kSuccess;
 }
 
