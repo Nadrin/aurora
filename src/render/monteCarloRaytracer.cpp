@@ -82,7 +82,7 @@ MStatus MonteCarloRaytracer::render(bool ipr)
 	for(unsigned short i=0; i<m_size.depth; i++) {
 		Renderer::generateRays(m_camera, m_size, m_region, i, m_rays, m_hit);
 
-		cudaRaytraceMonteCarlo(m_scene->geometry(), 
+		cudaRaytraceMonteCarlo(m_scene->geometry(),
 			m_scene->shaders(), m_scene->textures(), m_scene->lights(), 
 			m_rng, numRays, m_rays, m_hit);
 

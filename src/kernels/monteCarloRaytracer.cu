@@ -21,7 +21,8 @@ using namespace Aurora;
 typedef Stack<Ray, MAX_DEPTH+2> RayStack;
 
 inline __device__ void raytrace(RNG* rng, const Geometry& geometry,
-	const ShadersArray& shaders, const LightsArray& lights, RayStack& rs, HitPoint& hp, int& depth)
+	const Shader* shaders, const unsigned int numLights, const Light* lights,
+	RayStack& rs, HitPoint& hp, int& depth)
 {
 	Ray ray = rs.pop();
 	if(!intersect(geometry, ray, hp))
@@ -39,7 +40,7 @@ inline __device__ void raytrace(RNG* rng, const Geometry& geometry,
 	}
 
 	float3 Li = shader.emissionColor;
-	for(int i=0; i<lights.size; i++) {
+	for(int i=0; i<numLights; i++) {
 		const Light& light = lights[i];
 		if(light.isDeltaLight())
 			Li = Li + estimateDirectRadianceDelta(geometry, light, shader, bsdf, hp);
@@ -83,7 +84,8 @@ inline __device__ void raytrace(RNG* rng, const Geometry& geometry,
 	hp.color = hp.color + (Li * ray.weight);
 }
 
-__global__ static void cudaRaytraceKernel(const Geometry geometry, const ShadersArray shaders, const LightsArray lights,
+__global__ static void cudaRaytraceKernel(const Geometry geometry,
+	const Shader* shaders, const unsigned int numLights,  const Light* lights,
 	RNG* grng, const unsigned int numRays, Ray* rays, HitPoint* hits)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
@@ -99,7 +101,7 @@ __global__ static void cudaRaytraceKernel(const Geometry geometry, const Shaders
 
 	int depth=0;
 	while(depth <= MAX_DEPTH && rs.size > 0)
-		raytrace(&rng, geometry, shaders, lights, rs, hp, depth);
+		raytrace(&rng, geometry, shaders, numLights, lights, rs, hp, depth);
 }
 
 __host__ void cudaRaytraceMonteCarlo(const Geometry& geometry,
@@ -110,5 +112,6 @@ __host__ void cudaRaytraceMonteCarlo(const Geometry& geometry,
 	dim3 gridSize = make_grid(blockSize, dim3(numRays));
 
 	bindTextures(textures);
-	cudaRaytraceKernel<<<gridSize, blockSize>>>(geometry, shaders, lights, rng, numRays, rays, hits);
+	cudaRaytraceKernel<<<gridSize, blockSize>>>(geometry,
+		shaders.items, lights.size, lights.items, rng, numRays, rays, hits);
 }

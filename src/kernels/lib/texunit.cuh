@@ -7,7 +7,7 @@
 
 // Hacks to cope with CUDA 4.x extremely wired texture unit semantics.
 
-#define CUDA_MAX_TEXTURES 8
+#define CUDA_MAX_TEXTURES 32
 
 #define CUDA_BIND_TEXTURE(n, texarray)                \
 	if(n < texarray.size) {                           \
@@ -26,6 +26,30 @@ texture<float4, 2, cudaReadModeElementType> texunit4;
 texture<float4, 2, cudaReadModeElementType> texunit5;
 texture<float4, 2, cudaReadModeElementType> texunit6;
 texture<float4, 2, cudaReadModeElementType> texunit7;
+texture<float4, 2, cudaReadModeElementType> texunit8;
+texture<float4, 2, cudaReadModeElementType> texunit9;
+texture<float4, 2, cudaReadModeElementType> texunit10;
+texture<float4, 2, cudaReadModeElementType> texunit11;
+texture<float4, 2, cudaReadModeElementType> texunit12;
+texture<float4, 2, cudaReadModeElementType> texunit13;
+texture<float4, 2, cudaReadModeElementType> texunit14;
+texture<float4, 2, cudaReadModeElementType> texunit15;
+texture<float4, 2, cudaReadModeElementType> texunit16;
+texture<float4, 2, cudaReadModeElementType> texunit17;
+texture<float4, 2, cudaReadModeElementType> texunit18;
+texture<float4, 2, cudaReadModeElementType> texunit19;
+texture<float4, 2, cudaReadModeElementType> texunit20;
+texture<float4, 2, cudaReadModeElementType> texunit21;
+texture<float4, 2, cudaReadModeElementType> texunit22;
+texture<float4, 2, cudaReadModeElementType> texunit23;
+texture<float4, 2, cudaReadModeElementType> texunit24;
+texture<float4, 2, cudaReadModeElementType> texunit25;
+texture<float4, 2, cudaReadModeElementType> texunit26;
+texture<float4, 2, cudaReadModeElementType> texunit27;
+texture<float4, 2, cudaReadModeElementType> texunit28;
+texture<float4, 2, cudaReadModeElementType> texunit29;
+texture<float4, 2, cudaReadModeElementType> texunit30;
+texture<float4, 2, cudaReadModeElementType> texunit31;
 
 inline __device__ float3 texfetch(const int id, const float u, const float v)
 {
@@ -39,8 +63,32 @@ inline __device__ float3 texfetch(const int id, const float u, const float v)
 	case 5: px = tex2D(texunit5, u, v); break;
 	case 6: px = tex2D(texunit6, u, v); break;
 	case 7: px = tex2D(texunit7, u, v); break;
+	case 8: px = tex2D(texunit8, u, v); break;
+	case 9: px = tex2D(texunit9, u, v); break;
+	case 10: px = tex2D(texunit10, u, v); break;
+	case 11: px = tex2D(texunit11, u, v); break;
+	case 12: px = tex2D(texunit12, u, v); break;
+	case 13: px = tex2D(texunit13, u, v); break;
+	case 14: px = tex2D(texunit14, u, v); break;
+	case 15: px = tex2D(texunit15, u, v); break;
+	case 16: px = tex2D(texunit16, u, v); break;
+	case 17: px = tex2D(texunit17, u, v); break;
+	case 18: px = tex2D(texunit18, u, v); break;
+	case 19: px = tex2D(texunit19, u, v); break;
+	case 20: px = tex2D(texunit20, u, v); break;
+	case 21: px = tex2D(texunit21, u, v); break;
+	case 22: px = tex2D(texunit22, u, v); break;
+	case 23: px = tex2D(texunit23, u, v); break;
+	case 24: px = tex2D(texunit24, u, v); break;
+	case 25: px = tex2D(texunit25, u, v); break;
+	case 26: px = tex2D(texunit26, u, v); break;
+	case 27: px = tex2D(texunit27, u, v); break;
+	case 28: px = tex2D(texunit28, u, v); break;
+	case 29: px = tex2D(texunit29, u, v); break;
+	case 30: px = tex2D(texunit30, u, v); break;
+	case 31: px = tex2D(texunit31, u, v); break;
 	default:
-		return make_float3(0.0f, 0.0f, 0.0f);
+		return make_float3(1.0f, 1.0f, 1.0f);
 	}
 	return make_float3(px.x, px.y, px.z);
 }
@@ -55,4 +103,28 @@ __host__ static void bindTextures(const TexturesArray& textures)
 	CUDA_BIND_TEXTURE(5, textures);
 	CUDA_BIND_TEXTURE(6, textures);
 	CUDA_BIND_TEXTURE(7, textures);
+	CUDA_BIND_TEXTURE(8, textures);
+	CUDA_BIND_TEXTURE(9, textures);
+	CUDA_BIND_TEXTURE(10, textures);
+	CUDA_BIND_TEXTURE(11, textures);
+	CUDA_BIND_TEXTURE(12, textures);
+	CUDA_BIND_TEXTURE(13, textures);
+	CUDA_BIND_TEXTURE(14, textures);
+	CUDA_BIND_TEXTURE(15, textures);
+	CUDA_BIND_TEXTURE(16, textures);
+	CUDA_BIND_TEXTURE(17, textures);
+	CUDA_BIND_TEXTURE(18, textures);
+	CUDA_BIND_TEXTURE(19, textures);
+	CUDA_BIND_TEXTURE(20, textures);
+	CUDA_BIND_TEXTURE(21, textures);
+	CUDA_BIND_TEXTURE(22, textures);
+	CUDA_BIND_TEXTURE(23, textures);
+	CUDA_BIND_TEXTURE(24, textures);
+	CUDA_BIND_TEXTURE(25, textures);
+	CUDA_BIND_TEXTURE(26, textures);
+	CUDA_BIND_TEXTURE(27, textures);
+	CUDA_BIND_TEXTURE(28, textures);
+	CUDA_BIND_TEXTURE(29, textures);
+	CUDA_BIND_TEXTURE(30, textures);
+	CUDA_BIND_TEXTURE(31, textures);
 }
