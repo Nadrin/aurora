@@ -159,8 +159,11 @@ MStatus Scene::updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders)
 
 		dagMesh.getConnectedShaders(0, shaderGroups, shaderIDs);
 		for(unsigned int i=0; i<shaderGroups.length(); i++) {
+			MPlugArray buffer;
 			const MPlug surfaceShader = MFnDependencyNode(shaderGroups[i]).findPlug("surfaceShader");
-			surfaceShader.connectedTo(shaderPlugs, true, false);
+			surfaceShader.connectedTo(buffer, true, false);
+			for(unsigned int j=0; j<buffer.length(); j++)
+				shaderPlugs.append(buffer[j]);
 		}
 
 		MItMeshPolygon polyIterator(objects[obj]);
@@ -209,12 +212,12 @@ MStatus Scene::updateMeshes(MObjectArray& nodes, const ObjectHash& hShaders)
 				}
 
 				// Store shader indices
-				const unsigned int polygonIndex = polyIterator.index();
-				if(shaderIDs[polygonIndex] == -1)
+				const int shaderID = shaderIDs[polyIterator.index()];
+				if(shaderID == -1)
 					buffer.shaders[shaderOffset++] = 0;
 				else {
 					buffer.shaders[shaderOffset++] = 
-						(unsigned short)getIndexByHandle(MObjectHandle(shaderPlugs[shaderIDs[polygonIndex]].node()), hShaders);
+						(unsigned short)getIndexByHandle(MObjectHandle(shaderPlugs[shaderID].node()), hShaders);
 				}
 			}
 		}
