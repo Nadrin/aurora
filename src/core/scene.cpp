@@ -31,6 +31,7 @@
 #include <maya/MFnBlinnShader.h>
 
 #include <maya/MFnLight.h>
+#include <maya/MFnAmbientLight.h>
 
 using namespace Aurora;
 
@@ -341,8 +342,11 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 		buffer[i].intensity = dagLight.intensity();
 		buffer[i].samples   = dagLight.numShadowSamples();
 
+		buffer[i].area    = 0.0f;
+		buffer[i].ambient = 0.0f;
+
 		MTransformationMatrix transform;
-		if(node.apiType() == MFn::kPointLight || node.apiType() == MFn::kAreaLight) {
+		if(node.apiType() != MFn::kDirectionalLight) {
 			MDagPath dagPath;
 			dagLight.getPath(dagPath);
 			transform = dagPath.inclusiveMatrix();
@@ -351,27 +355,26 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 		switch(node.apiType()) {
 		case MFn::kAmbientLight:
 			{
-				buffer[i].type    = Light::AmbientLight;
-				buffer[i].area    = 0.0f;
+				MFnAmbientLight dagAmbientLight(node);
+				buffer[i].type     = Light::AmbientLight;
+				buffer[i].position = make_float3(transform.getTranslation(MSpace::kWorld));
+				buffer[i].ambient  = dagAmbientLight.ambientShade();
 			}
 			break;
 		case MFn::kPointLight:
 			{
 				buffer[i].type     = Light::PointLight;
 				buffer[i].position = make_float3(transform.getTranslation(MSpace::kWorld));
-				buffer[i].area     = 0.0f;
 			}
 			break;
 		case MFn::kDirectionalLight:
 			{
 				buffer[i].type      = Light::DirectionalLight;
 				buffer[i].direction = make_float3(dagLight.lightDirection(0, MSpace::kWorld));
-				buffer[i].area      = 0.0f;
 			}
 			break;
 		case MFn::kAreaLight:
 			{
-
 				buffer[i].type      = Light::AreaLight;
 				buffer[i].direction = make_float3(dagLight.lightDirection(0, MSpace::kWorld));
 
@@ -383,12 +386,6 @@ MStatus Scene::updateLights(MObjectArray& nodes)
 				buffer[i].e1        = v2 - v1;
 				buffer[i].e2        = v3 - v1;
 				buffer[i].area      = length(buffer[i].e1) * length(buffer[i].e2);
-			}
-			break;
-		default:
-			{
-				buffer[i].type      = Light::AmbientLight;
-				buffer[i].samples   = 0;
 			}
 			break;
 		}

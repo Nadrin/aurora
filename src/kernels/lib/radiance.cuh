@@ -5,6 +5,11 @@
 
 #pragma once
 
+inline __device__ float3 estimateAmbientRadiance(const Light& light, const BSDF& bsdf)
+{
+	return bsdf.f() * (light.color * light.intensity * light.ambient);
+}
+
 inline __device__ float3 estimateDirectRadianceDelta(const Geometry& geometry,
 	const Light& light, const Shader& shader, const BSDF& bsdf, const HitPoint& hp)
 {

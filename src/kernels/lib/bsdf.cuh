@@ -14,9 +14,8 @@ inline __device__ float3 BSDF::lf(const float3& wo, const float3& wi) const
 {
 	switch(type) {
 	case BSDF_Lambert:
-		return color1 * InvPi;
 	case BSDF_Phong:
-		return color1 * InvPi;
+		return f();
 	}
 }
 
@@ -31,6 +30,15 @@ inline __device__ float  BSDF::lpdf(const float3& wo, const float3& wi) const
 }
 
 // Global (world space) functions
+inline __device__ float3 BSDF::f() const
+{
+	switch(type) {
+	case BSDF_Lambert:
+		return color1 * InvPi;
+	case BSDF_Phong:
+		return color1 * InvPi;
+	}
+}
 
 inline __device__ float3 BSDF::f(const float3& wo, const float3& wi) const
 {

@@ -10,6 +10,11 @@ inline __device__ bool Light::isDeltaLight() const
 	return type != Light::AreaLight;
 }
 
+inline __device__ bool Light::isAmbientLight() const
+{
+	return type == Light::AmbientLight;
+}
+
 inline __device__ float3 Light::L(const float3& wi) const
 {
 	// Area light only
@@ -19,12 +24,18 @@ inline __device__ float3 Light::L(const float3& wi) const
 inline __device__ float3 Light::sampleL(RNG* rng, Ray& ray, float& pdf) const
 {
 	switch(type) {
+	case AmbientLight:
+		ray.dir = position - ray.pos;
+		ray.t   = length(ray.dir);
+		ray.dir = ray.dir / ray.t;
+		pdf     = 1.0f;
+		return (color * intensity) * (1.0f - ambient);
 	case PointLight:
 		ray.dir = position - ray.pos;
 		ray.t   = length(ray.dir);
 		ray.dir = ray.dir / ray.t;
 		pdf     = 1.0f;
-		return (color * intensity);// / ray.t*ray.t;
+		return (color * intensity) / (ray.t*ray.t);
 	case DirectionalLight:
 		ray.dir = -direction;
 		ray.t   = Infinity;
@@ -51,6 +62,7 @@ inline __device__ bool Light::visible(const Geometry& geometry, const Ray& ray) 
 inline __device__ float Light::pdf(const Ray& ray) const
 {
 	switch(type) {
+	case AmbientLight:
 	case PointLight:
 	case DirectionalLight:
 		return 0.0f;
@@ -62,6 +74,8 @@ inline __device__ float Light::pdf(const Ray& ray) const
 inline __device__ float Light::power(const Geometry& geometry) const
 {
 	switch(type) {
+	case AmbientLight:
+		return 4.0f * Pi * luminosity(color) * intensity * (1.0f - ambient);
 	case PointLight:
 		return 4.0f * Pi * luminosity(color) * intensity;
 	case DirectionalLight:
@@ -78,6 +92,11 @@ inline __device__ Photon Light::emitPhoton(RNG* rng, const Geometry& geometry) c
 {
 	Photon p;
 	switch(type) {
+	case AmbientLight:
+		p.pos    = position;
+		p.wi     = sampleSphere(curand_uniform(rng), curand_uniform(rng));
+		p.energy = color * intensity * (1.0f - ambient);
+		break;
 	case PointLight:
 		p.pos    = position;
 		p.wi     = sampleSphere(curand_uniform(rng), curand_uniform(rng));

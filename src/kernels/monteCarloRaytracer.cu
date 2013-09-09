@@ -42,6 +42,9 @@ inline __device__ void raytrace(RNG* rng, const Geometry& geometry,
 	float3 Li = shader.emissionColor;
 	for(int i=0; i<numLights; i++) {
 		const Light& light = lights[i];
+		if(light.isAmbientLight())
+			Li = Li + estimateAmbientRadiance(light, bsdf);
+
 		if(light.isDeltaLight())
 			Li = Li + estimateDirectRadianceDelta(geometry, light, shader, bsdf, hp);
 		else

@@ -24,6 +24,7 @@ public:
 	LightType type;
 
 	float  intensity;
+	float  ambient;
 	float  area;
 	short  samples;
 
@@ -41,7 +42,7 @@ public:
 	__device__ float  pdf(const Ray& ray) const;
 	__device__ float  power(const Geometry& geometry) const;
 	__device__ bool   isDeltaLight() const;
-
+	__device__ bool	  isAmbientLight() const;
 };
 
 
