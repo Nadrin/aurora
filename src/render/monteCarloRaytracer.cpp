@@ -4,8 +4,13 @@
  */
 
 #include <stdafx.h>
+#include <core/engine.h>
 #include <render/monteCarloRaytracer.h>
 #include <kernels/kernels.h>
+
+#include <maya/MProgressWindow.h>
+
+#define TILE_SIZE (256*256)
 
 using namespace Aurora;
 
@@ -73,21 +78,43 @@ MStatus MonteCarloRaytracer::setRegion(const Rect& region)
 	return MS::kSuccess;
 }
 
-MStatus MonteCarloRaytracer::render(bool ipr)
+MStatus MonteCarloRaytracer::render(Engine* engine, bool ipr)
 {
 	const float weight = 1.0f / m_size.depth;
-	const unsigned int numRays = m_size.width * m_size.height;
+	const unsigned int numRays  = m_size.width * m_size.height;
+	const unsigned int numTiles = (numRays / TILE_SIZE) + ((numRays % TILE_SIZE) > 0);
 
 	Renderer::clearPixels(m_size, m_pixels);
+
+	if(!ipr) {
+		MProgressWindow::setProgressRange(0, m_size.depth * numTiles);
+		engine->refreshUI();
+	}
+
 	for(unsigned short i=0; i<m_size.depth; i++) {
 		Renderer::generateRays(m_camera, m_size, m_region, i, m_rays, m_hit);
+		
+		for(unsigned int j=0; j<numTiles; j++) {
+			const unsigned int offset      = j*TILE_SIZE;
+			const unsigned int numTileRays = min(numRays - offset, unsigned int(TILE_SIZE));
 
-		cudaRaytraceMonteCarlo(m_scene->geometry(),
-			m_scene->shaders(), m_scene->textures(), m_scene->lights(), 
-			m_rng, numRays, m_rays, m_hit);
+			cudaRaytraceMonteCarlo(m_scene->geometry(),
+				m_scene->shaders(), m_scene->textures(), m_scene->lights(), 
+				m_rng, offset, numTileRays, m_rays, m_hit);
+
+			if(!ipr) {
+				gpu::cudaDeviceSynchronize();
+
+				if(MProgressWindow::isCancelled())
+					return MS::kSuccess;
+				MProgressWindow::advanceProgress(1);
+				engine->refreshUI();
+			}
+		}
 
 		Renderer::drawPixels(m_size, m_region, m_hit, weight, m_pixels);
 	}
+
 	//Renderer::filterPixels(m_size, m_region, (void**)&m_pixels);
 	return MS::kSuccess;
 }

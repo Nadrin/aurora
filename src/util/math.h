@@ -34,6 +34,9 @@ typedef gpu::float2 float2;
 typedef gpu::float3 float3;
 typedef gpu::float4 float4;
 
+typedef gpu::uchar3 uchar3;
+typedef gpu::uchar4 uchar4;
+
 template <typename T> inline T min(const T a, const T b)
 { return a < b ? a : b; }
 template <typename T> inline T max(const T a, const T b)
@@ -58,6 +61,11 @@ inline float3 make_float3(const MVector& vector)
 { return gpu::make_float3(float(vector.x), float(vector.y), float(vector.z)); }
 inline float3 make_float3(const MFloatVector& vector)
 { return gpu::make_float3(vector.x, vector.y, vector.z); }
+
+inline uchar3 make_uchar3(const unsigned char x, const unsigned char y, const unsigned char z)
+{ return gpu::make_uchar3(x, y, z); }
+inline uchar4 make_uchar4(const unsigned char x, const unsigned char y, const unsigned char z, const unsigned char w)
+{ return gpu::make_uchar4(x, y, z, w); }
 
 inline float3 operator*(const MMatrix& matrix, const float3& v)
 {

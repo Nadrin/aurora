@@ -21,7 +21,7 @@ inline __device__ float3 estimateDirectRadianceDelta(const Geometry& geometry,
 
 	if(pdf > 0.0f && !zero(Li)) {
 		const float3 f = bsdf.f(hp.wo, wi.dir);
-		if(!zero(f) && light.visible(geometry, wi))
+		if(!zero(f) && light.visiblePoint(geometry, wi))
 			return f * Li * fmaxf(0.0f, dot(wi.dir, bsdf.N));
 	}
 	return make_float3(0.0f);
@@ -41,17 +41,18 @@ inline __device__ float3 estimateDirectRadiance(RNG* rng, const Geometry& geomet
 		// Sample light
 		wi = Ray(hp.position);
 		Li = light.sampleL(rng, wi, lightPdf);
-		//wi.offset();
+		wi.offset();
 
 		if(lightPdf > 0.0f && !zero(Li)) {
 			float3 f = bsdf.f(hp.wo, wi.dir);
-			if(!zero(f) && light.visible(geometry, wi)) {
+			if(!zero(f) && light.visiblePoint(geometry, wi)) {
 				bsdfPdf = bsdf.pdf(hp.wo, wi.dir);
-				weight  = powerHeuristic(1, lightPdf, 1, bsdfPdf);
-				Ls = Ls + f * Li * (fmaxf(0.0f, dot(wi.dir, bsdf.N)) * weight / lightPdf);
+				//weight  = powerHeuristic(1, lightPdf, 1, bsdfPdf);
+				Ls = Ls + f * Li * fmaxf(0.0f, dot(wi.dir, bsdf.N));// * (weight / lightPdf);
 			}
 		}
 
+#if 0
 		// Sample BSDF
 		wi = Ray(hp.position);
 		f  = bsdf.samplef(rng, hp.wo, wi.dir, bsdfPdf);
@@ -62,11 +63,12 @@ inline __device__ float3 estimateDirectRadiance(RNG* rng, const Geometry& geomet
 			weight   = powerHeuristic(1, bsdfPdf, 1, lightPdf);
 
 			wi.t = Infinity;
-			if(light.visible(geometry, wi)) {
+			if(light.visibleArea(geometry, wi)) {
 				Li = light.L(-wi.dir);
 				Ls = Ls + f * Li * (fmaxf(0.0f, dot(wi.dir, bsdf.N)) * weight / bsdfPdf);
 			}
 		}
+#endif
 
 		L = L + Ls;
 	}

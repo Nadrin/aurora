@@ -22,7 +22,7 @@ public:
 	MStatus destroyFrame();
 	MStatus setRegion(const Rect& region);
 
-	MStatus   render(bool ipr);
+	MStatus   render(Engine* engine, bool ipr);
 	RV_PIXEL* framebuffer();
 	
 protected:

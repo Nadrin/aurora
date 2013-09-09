@@ -89,15 +89,18 @@ inline __device__ void raytrace(RNG* rng, const Geometry& geometry,
 
 __global__ static void cudaRaytraceKernel(const Geometry geometry,
 	const Shader* shaders, const unsigned int numLights,  const Light* lights,
-	RNG* grng, const unsigned int numRays, Ray* rays, HitPoint* hits)
+	RNG* grng, const unsigned int offset, const unsigned int numRays,
+	Ray* rays, HitPoint* hits)
 {
 	const unsigned int threadId = blockDim.x * blockIdx.x + threadIdx.x;
 	if(threadId >= numRays)
 		return;
+
+	const unsigned int rayId = offset + threadId;
 	
-	RNG rng      = grng[threadId];
-	Ray& ray     = rays[threadId];
-	HitPoint& hp = hits[threadId];
+	RNG rng      = grng[rayId];
+	Ray& ray     = rays[rayId];
+	HitPoint& hp = hits[rayId];
 
 	RayStack rs;
 	rs.push(ray);
@@ -105,16 +108,18 @@ __global__ static void cudaRaytraceKernel(const Geometry geometry,
 	int depth=0;
 	while(depth <= MAX_DEPTH && rs.size > 0)
 		raytrace(&rng, geometry, shaders, numLights, lights, rs, hp, depth);
+
+	grng[rayId] = rng;
 }
 
 __host__ void cudaRaytraceMonteCarlo(const Geometry& geometry,
 	const ShadersArray& shaders, const TexturesArray& textures, const LightsArray& lights,
-	RNG* rng, const unsigned int numRays, Ray* rays, HitPoint* hits)
+	RNG* rng, const unsigned int offset, const unsigned int numRays, Ray* rays, HitPoint* hits)
 {
 	dim3 blockSize(64);
 	dim3 gridSize = make_grid(blockSize, dim3(numRays));
 
 	bindTextures(textures);
 	cudaRaytraceKernel<<<gridSize, blockSize>>>(geometry,
-		shaders.items, lights.size, lights.items, rng, numRays, rays, hits);
+		shaders.items, lights.size, lights.items, rng, offset, numRays, rays, hits);
 }

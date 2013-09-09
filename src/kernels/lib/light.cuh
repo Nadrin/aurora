@@ -54,8 +54,24 @@ inline __device__ float3 Light::sampleL(RNG* rng, Ray& ray, float& pdf) const
 	}
 }
 
-inline __device__ bool Light::visible(const Geometry& geometry, const Ray& ray) const
+inline __device__ bool Light::visiblePoint(const Geometry& geometry, const Ray& ray) const
 {
+	return !intersectAny(geometry, ray);
+}
+
+inline __device__ bool Light::visibleArea(const Geometry& geometry, Ray& ray) const
+{
+	const float3 v1 = position + e1;
+	const float3 v2 = position + e2;
+	
+	float u, v, t1 = Infinity, t2 = Infinity;
+	bool hit = (
+		ray.intersect(position, v1, v2, u, v, t1) ||
+		ray.intersect(position + (e1+e2), v1, v2, u, v, t2));
+
+	if(!hit) return false;
+
+	ray.t = fminf(t1, t2);
 	return !intersectAny(geometry, ray);
 }
 
@@ -67,7 +83,8 @@ inline __device__ float Light::pdf(const Ray& ray) const
 	case DirectionalLight:
 		return 0.0f;
 	case AreaLight:
-		return 1.0f / (fmaxf(0.0f, dot(direction, -ray.dir)) * area);
+		return 1.0f / fabsf(dot(direction, -ray.dir));
+		//return (ray.t*ray.t) / (fabsf(dot(direction, -ray.dir)) * area);
 	}
 }
 

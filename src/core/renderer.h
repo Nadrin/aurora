@@ -16,6 +16,8 @@
 
 namespace Aurora {
 
+class Engine;
+
 class Renderer
 {
 public:
@@ -26,7 +28,7 @@ public:
 
 	virtual MStatus	  update() { return MS::kSuccess; }
 	
-	virtual MStatus   render(bool ipr) = 0;
+	virtual MStatus   render(Engine* engine, bool ipr) = 0;
 	virtual RV_PIXEL* framebuffer() = 0;
 
 protected:

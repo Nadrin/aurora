@@ -308,16 +308,16 @@ MStatus Scene::updateTextures(MObjectArray& nodes, ObjectHash& hTextures)
 		const MObject node = nodes[i];
 		
 		MImage image;
-		if(!image.readFromTextureNode(node, MImage::kFloat))
+		if(!image.readFromTextureNode(node, MImage::kByte))
 			continue;
-		if(image.depth() != 16) {
+		if(image.depth() != 4) {
 			std::cerr << "[Aurora] Warning: Unsupported texture depth: " << image.depth() << std::endl;
 			continue;
 		}
 
 		unsigned int w, h;
 		image.getSize(w, h);
-		if(!m_textures[i].load(w, h, image.floatPixels()))
+		if(!m_textures[i].load(w, h, image.pixels()))
 			continue;
 	
 		hTextures[MObjectHandle(node).hashCode()] = setID(i);

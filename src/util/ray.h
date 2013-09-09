@@ -29,6 +29,10 @@ public:
 	Ray& offset(const float off=Epsilon);
 
 	__device__
+	bool intersect(const float3& v1, const float3& v2, const float3& v3,
+		float& u, float& v, float& t) const;
+
+	__device__
 	bool intersect(const Primitive3& triangle, float& u, float& v, float& t) const;
 
 	__device__

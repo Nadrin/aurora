@@ -14,6 +14,7 @@
 #include <maya/MItDag.h>
 
 #include <maya/MSceneMessage.h>
+#include <maya/MProgressWindow.h>
 
 using namespace Aurora;
 
@@ -179,6 +180,15 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 
 	std::cerr << "[Aurora] Rendering ..." << std::endl;
 
+	MProgressWindow::reserve();
+	MProgressWindow::setInterruptable(true);
+	MProgressWindow::setTitle("Rendering progress");
+	MProgressWindow::startProgress();
+
+	MProgressWindow::setProgressStatus("Updating geometry ...");
+	MProgressWindow::setProgressRange(0, 1);
+	refreshUI();
+
 	gpu::cudaEventRecord(m_eventUpdate[0]);
 	if((status = m_scene->update(Scene::UpdateFull)) != MS::kSuccess) {
 		m_state = Engine::StateIdle;
@@ -186,7 +196,7 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	}
 	gpu::cudaEventRecord(m_eventUpdate[1]);
 
-	if(!m_renderer->createFrame(width, height, 4, m_scene, m_camera)) {
+	if(!m_renderer->createFrame(width, height, 16, m_scene, m_camera)) {
 		std::cerr << "[Aurora] Failed to create rendering context: Out of memory." << std::endl;
 		return MS::kFailure;
 	}
@@ -196,23 +206,38 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 
 	m_renderer->setRegion(m_window);
 	MRenderView::setCurrentCamera(m_camera);
+	MRenderView::startRender(m_window.right+1, m_window.top+1, true, false);
+
+	MProgressWindow::setProgressStatus("Raytracing ...");
+	refreshUI();
 
 	gpu::cudaEventRecord(m_eventRender[0]);
 	if((status = m_renderer->update()) != MS::kSuccess) {
 		std::cerr << "[Aurora] Renderer update failed." << std::endl;
 		m_renderer->destroyFrame();
+
+		MRenderView::endRender();
+		MProgressWindow::endProgress();
+
 		m_state = Engine::StateIdle;
 		return status;
 	}
-	if((status = m_renderer->render(false)) != MS::kSuccess) {
+	if((status = m_renderer->render(this, false)) != MS::kSuccess) {
 		std::cerr << "[Aurora] Rendering frame failed." << std::endl;
 		m_renderer->destroyFrame();
+
+		MRenderView::endRender();
+		MProgressWindow::endProgress();
+
 		m_state = Engine::StateIdle;
 		return status;
 	}
 	gpu::cudaEventRecord(m_eventRender[1]);
 
 	status = update(false);
+	MRenderView::endRender();
+	MProgressWindow::endProgress();
+
 	m_renderer->destroyFrame();
 	m_scene->free();
 
@@ -225,17 +250,28 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	return status;
 }
 
-MStatus Engine::update(bool clearBackground)
+MStatus Engine::refreshUI()
+{
+	return MGlobal::executeCommand("refresh -f;");
+}
+
+MStatus Engine::update(bool ipr)
 {
 	if(!m_lock.tryLock())
 		return MS::kFailure;
 
 	gpu::cudaDeviceSynchronize();
 
-	MRenderView::startRender(m_window.right+1, m_window.top+1, !clearBackground, true);
+	if(ipr)
+		MRenderView::startRender(m_window.right+1, m_window.top+1, false, true);
+
 	MRenderView::updatePixels(m_window.left, m_window.right, m_window.bottom, m_window.top,
 		m_renderer->framebuffer(), true);
-	MRenderView::endRender();
+
+	if(ipr)
+		MRenderView::endRender();
+	else
+		MGlobal::executeCommand("refresh -f;");
 
 	if(m_state == Engine::StateIprUpdate) {
 		m_scene->update(Scene::UpdateIpr);
@@ -258,7 +294,7 @@ MThreadRetVal Engine::renderThread(void* context)
 		engine->m_pause.unlock();
 
 		Sleep(AURORA_CPUYIELD_TIME);
-		if(!engine->m_renderer->render(true))
+		if(!engine->m_renderer->render(engine, true))
 			continue;
 
 		if(engine->m_state == Engine::StateIprStopped)

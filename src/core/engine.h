@@ -32,7 +32,8 @@ public:
 	MStatus iprStop();
 
 	MStatus	render(unsigned int width, unsigned int height, const MString& camera);
-	MStatus update(bool clearBackground);
+	MStatus update(bool ipr);
+	MStatus refreshUI();
 
 protected:
 	Engine();

@@ -16,8 +16,14 @@ inline __device__ Ray& Ray::offset(const float off)
 
 inline __device__ bool Ray::intersect(const Primitive3& triangle, float& u, float& v, float& t) const
 {
-	float3 e1 = triangle.v2 - triangle.v1;
-	float3 e2 = triangle.v3 - triangle.v1;
+	return intersect(triangle.v1, triangle.v2, triangle.v3, u, v, t);
+}
+
+inline __device__ bool Ray::intersect(const float3& v1, const float3& v2, const float3& v3,
+	float& u, float& v, float& t) const
+{
+	float3 e1 = v2 - v1;
+	float3 e2 = v3 - v1;
 
 	float3 P  = cross(dir, e2);
 	float det = dot(e1, P);
@@ -26,7 +32,7 @@ inline __device__ bool Ray::intersect(const Primitive3& triangle, float& u, floa
 		return false;
 	float invdet = 1.0f / det;
 
-	float3 T = pos - triangle.v1;
+	float3 T = pos - v1;
 	u        = dot(T, P) * invdet;
 	if(u < 0.0f || u > 1.0f)
 		return false;

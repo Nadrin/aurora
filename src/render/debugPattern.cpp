@@ -4,6 +4,7 @@
  */
 
 #include <stdafx.h>
+#include <core/engine.h>
 #include <render/DebugPattern.h>
 
 using namespace Aurora;
@@ -46,7 +47,7 @@ RV_PIXEL* DebugPattern::framebuffer()
 	return m_framebuffer;
 }
 
-MStatus DebugPattern::render(bool ipr)
+MStatus DebugPattern::render(Engine* engine, bool ipr)
 {
 	for(unsigned int y=m_region.bottom; y<m_region.top; y++) {
 		for(unsigned int x=m_region.left; x<m_region.right; x++) {
@@ -60,6 +61,9 @@ MStatus DebugPattern::render(bool ipr)
 			p->a = 1.0f;
 		}
 	}
+
+	if(!ipr)
+		engine->update(false);
 
 	m_offset.x++;
 	m_offset.y++;

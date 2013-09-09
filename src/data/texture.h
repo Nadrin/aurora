@@ -20,6 +20,7 @@ public:
 	Texture();
 
 	bool load(const unsigned int w, const unsigned int h, const float* data);
+	bool load(const unsigned int w, const unsigned int h, const unsigned char* data);
 	void free();
 
 	unsigned int width;
