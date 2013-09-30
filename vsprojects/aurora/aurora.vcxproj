@@ -228,7 +228,7 @@ copy "$(TargetPath)" "$(MAYA_LOCATION)\bin\plug-ins"
 copy "$(SolutionDir)\src\maya\aurora.mel" "$(MAYA_LOCATION)\bin\scripts"</Command>
     </PostBuildEvent>
     <CudaCompile>
-      <CodeGeneration>compute_20,sm_21</CodeGeneration>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
       <GPUDebugInfo>false</GPUDebugInfo>
       <PtxAsOptionV>false</PtxAsOptionV>
       <Include>$(SolutionDir)\src;%(Include)</Include>

@@ -6,7 +6,7 @@
 // Basic info
 #define AURORA_NAME     "Aurora Renderer"
 #define AURORA_VENDOR   "Michal Siejak"
-#define AURORA_VERSION  "0.1"
+#define AURORA_VERSION  "1.0"
 
 #define AURORA_BANNER AURORA_NAME" v"AURORA_VERSION" (c) Copyright "AURORA_VENDOR
 

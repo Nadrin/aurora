@@ -196,7 +196,7 @@ MStatus Engine::render(unsigned int width, unsigned int height, const MString& c
 	}
 	gpu::cudaEventRecord(m_eventUpdate[1]);
 
-	if(!m_renderer->createFrame(width, height, 16, m_scene, m_camera)) {
+	if(!m_renderer->createFrame(width, height, 4, m_scene, m_camera)) {
 		std::cerr << "[Aurora] Failed to create rendering context: Out of memory." << std::endl;
 		return MS::kFailure;
 	}
